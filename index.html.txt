@@ -40,10 +40,32 @@
 </div>
 
 <script type="module">
+const savedNickname = localStorage.getItem("wolbaehwayang_nickname");
+
+if (savedNickname) {
+  document.getElementById("nicknameBox").style.display = "none";
+  console.log("자동 입장:", savedNickname);
+}
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 🔽 여기!
+const savedNickname = localStorage.getItem("wolbaehwayang_nickname");
+if (savedNickname) {
+  document.getElementById("nicknameBox").style.display = "none";
+}
+
+localStorage.setItem("wolbaehwayang_nickname", nickname);
+
+// 🔽 이 줄 추가
+document.getElementById("nicknameBox").style.display = "none";
+
+
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  // 🔐 Firebase 설정 (본인 프로젝트 값으로 교체)
+  // 🔐 Firebase 설정
   const firebaseConfig = {
     apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
     authDomain: "wolbaehwayang-d1787.firebaseapp.com",
@@ -88,5 +110,6 @@
 
 
 </html>
+
 
 
