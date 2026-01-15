@@ -24,6 +24,7 @@
 </script>
 
 </body>
+<div id="nicknameBox">
 <h2>닉네임 입력</h2>
 
 <input
@@ -36,6 +37,7 @@
 <button id="saveNicknameBtn">입장하기</button>
 
 <p id="statusMsg"></p>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -43,9 +45,9 @@
 
   // 🔐 Firebase 설정 (본인 프로젝트 값으로 교체)
   const firebaseConfig = {
-    apiKey: "여기에_APIKEY",
-    authDomain: "여기에_authDomain",
-    projectId: "여기에_projectId"
+    apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
+    authDomain: "wolbaehwayang-d1787.firebaseapp.com",
+    projectId: "wolbaehwayang-d1787"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -86,4 +88,5 @@
 
 
 </html>
+
 
