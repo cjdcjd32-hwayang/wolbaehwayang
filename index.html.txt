@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Wolbaehwayang</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+</head>
+<body>
+
+<h1>🌱 Wolbaehwayang</h1>
+<p>Firebase Hosting 연결 테스트 성공</p>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
+    authDomain: "wolbaehwayang-d1787.firebaseapp.com",
+    projectId: "wolbaehwayang-d1787"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+</script>
+
+</body>
+</html>
