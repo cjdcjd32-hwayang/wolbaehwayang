@@ -1117,7 +1117,7 @@
       meetSnap.forEach(d=>{
         const x = d.data();
         if (!isInThisMonth(x.dateKey)) return;
-        (meetingsByDate[x.dateKey] ||= []).push(x);
+        (meetingsByDate[x.dateKey] ||= []).push({ id: d.id, ...x });
       });
 
       cachedDayData = { chantsByDate, activitiesByDate, meetingsByDate };
@@ -1211,12 +1211,66 @@
         body.innerHTML = `
           <div class="detail-block">
             <div class="detail-title">📌 회합</div>
-            ${meets.length ? meets.map(it=>`
-              <div class="small">• ${esc(it.title||"회합")}${it.time?` · ${esc(it.time)}`:""}${it.importance?` · (${esc(it.importance)})`:""}</div>
+            ${meets.length ? meets.map((it, idx)=>`
+              <div class="small" style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+                <div style="flex:1;min-width:0;">
+                  • ${esc(it.title||"회합")}${it.time?` · ${esc(it.time)}`:""}${it.importance?` · (${esc(it.importance)})`:""}
+                </div>
+                <div style="display:flex;gap:8px;flex:0 0 auto;">
+                  <button class="mini-btn light" data-meet-edit="${it.id}">수정</button>
+                  <button class="mini-btn light" data-meet-del="${it.id}">삭제</button>
+                </div>
+              </div>
             `).join("") : `<div class="small">기록 없음</div>`}
           </div>
         `;
-      }
+
+        // 이벤트 바인딩
+        meets.forEach(it=>{
+          const editBtn = body.querySelector(`[data-meet-edit="${it.id}"]`);
+          const delBtn  = body.querySelector(`[data-meet-del="${it.id}"]`);
+
+          if (editBtn){
+            editBtn.onclick = async ()=>{
+              const newTitle = prompt("회합명", it.title || "");
+              if (newTitle === null) return;
+              const newTime = prompt("시간(예: 19:30)", it.time || "");
+              if (newTime === null) return;
+              const newImp = prompt("중요도(낮음/보통/높음)", it.importance || "보통");
+              if (newImp === null) return;
+
+              try{
+                await updateDoc(doc(db,"meetings", it.id),{
+                  title: newTitle.trim(),
+                  time: (newTime||"").trim(),
+                  importance: (newImp||"보통").trim(),
+                  updatedAt: serverTimestamp()
+                });
+                alert("수정 완료");
+                await refreshAll();
+                // 현재 날짜 상세 다시 열어 갱신
+                openDayDetail(dateKey);
+              }catch(e){
+                alert("수정 실패: " + (e?.message || e));
+              }
+            };
+          }
+
+        if (delBtn){
+          delBtn.onclick = async ()=>{
+            if (!confirm("이 회합을 삭제할까요?")) return;
+            try{
+              await deleteDoc(doc(db,"meetings", it.id));
+              alert("삭제 완료");
+              await refreshAll();
+              openDayDetail(dateKey);
+            }catch(e){
+              alert("삭제 실패: " + (e?.message || e));
+            }
+          };
+        }
+      });
+    }
 
       // 탭 이벤트
       tabbar.querySelectorAll(".tab").forEach(t=>{
@@ -1507,15 +1561,16 @@
 
       list.innerHTML = "불러오는 중...";
       const snap = await getDocs(collection(db,"schoolSchedules"));
+
       const items = [];
       snap.forEach(d=>{
-        const x = d.data();
-        if (isInThisMonth(x.dateKey)) items.push({ id: d.id, ...x });
+       const x = d.data();
+        if (isInThisMonthOrNextMonth(x.dateKey)) items.push({ id: d.id, ...x });
       });
       items.sort((a,b)=> (a.dateKey||"").localeCompare(b.dateKey||""));
 
       if (items.length === 0){
-        list.innerHTML = `<div class="small">이달의 스쿨 일정이 없습니다.</div>`;
+        list.innerHTML = `<div class="small">이번달/다음달의 스쿨 일정이 없습니다.</div>`;
         return;
       }
 
