@@ -16,9 +16,10 @@
       background:rgba(255,255,255,.85);
       padding:16px;
       text-align:center;
-      font-size:1.4rem;
-      font-weight:bold
+      font-size:1.35rem;
+      font-weight:800;
     }
+
     nav{
       display:flex;
       justify-content:space-around;
@@ -26,25 +27,30 @@
       padding:10px;
       gap:6px;
       flex-wrap:wrap;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(8px);
     }
     nav button{
       border:none;
       background:none;
       font-size:1rem;
       cursor:pointer;
-      padding:6px 10px;
-      border-radius:10px;
+      padding:8px 12px;
+      border-radius:12px;
+      touch-action: manipulation;
     }
     nav button:hover{ background:rgba(0,0,0,.05); }
 
-    section{display:none;padding:20px}
+    section{display:none;padding:16px}
     section.active{display:block}
 
     .card{
-      background:rgba(255,255,255,.9);
+      background:rgba(255,255,255,.92);
       border-radius:16px;
-      padding:16px;
-      margin-bottom:16px
+      padding:14px;
+      margin-bottom:14px;
     }
 
     #nicknameLayer{
@@ -61,11 +67,12 @@
     select, input{
       width:100%;
       box-sizing:border-box;
-      padding:10px 12px;
+      padding:12px 12px;
       border-radius:12px;
       border:1px solid rgba(0,0,0,.15);
       outline:none;
       background:#fff;
+      font-size: 1rem;
     }
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{
@@ -77,6 +84,7 @@
       background:#111;
       color:#fff;
       font-size:1rem;
+      touch-action: manipulation;
     }
     .btn.secondary{background:#444}
     .small{font-size:.9rem;opacity:.85}
@@ -154,67 +162,41 @@
       width: 60px;
       height: 192px;
       border-radius: 999px;
-      background: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.88);
       border: 2px solid rgba(0,0,0,.12);
       position: relative;
       z-index: 2;
       overflow:hidden;
       box-sizing: border-box;
+      padding: 8px;
+      display:flex;
+      align-items:stretch;
+      justify-content:stretch;
     }
 
-    /* 가로 줄무늬(배경) */
-    .tube::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        repeating-linear-gradient(
-          to top,
-          rgba(255,255,255,.92) 0px,
-          rgba(255,255,255,.92) 10px,  /* 흰색 줄 */
-          rgba(0,0,0,.06) 10px,
-          rgba(0,0,0,.06) 14px         /* 회색 줄 */
-        );
-      opacity: .95;
-      z-index:1;
+    /* ===== (요청) 격자 300칸(20x15) ===== */
+    .tube-grid{
+      width: 100%;
+      height: 100%;
+      display:grid;
+      grid-template-columns: repeat(20, 1fr);
+      grid-template-rows: repeat(15, 1fr);
+      gap: 1px;
+      background: rgba(0,0,0,.05);
+      border-radius: 12px;
+      padding: 2px;
+      box-sizing: border-box;
     }
-
-    /* 채움 레이어: 흰색 줄 영역에서만 보이도록 마스크 */
-    .tube-fill{
-      position:absolute;
-      left:0;
-      right:0;
-      bottom:0;
-      height:0%;
-      z-index:2;
-      transition: height .35s ease;
-
-      /* 마스크: 흰색 줄(0~10px) 부분만 채움이 보이게 */
-      -webkit-mask-image: repeating-linear-gradient(
-        to top,
-        #000 0px,
-        #000 10px,
-        transparent 10px,
-        transparent 14px
-      );
-      mask-image: repeating-linear-gradient(
-        to top,
-        #000 0px,
-        #000 10px,
-        transparent 10px,
-        transparent 14px
-      );
-      -webkit-mask-size: 100% 14px;
-      mask-size: 100% 14px;
-      -webkit-mask-repeat: repeat;
-      mask-repeat: repeat;
+    .cell{
+      background: rgba(255,255,255,.60);
+      border-radius: 1px;
     }
 
     .bulb{
       width: 82px;
       height: 82px;
       border-radius: 999px;
-      background: rgba(255,255,255,.88);
+      background: rgba(255,255,255,.90);
       border: 2px solid rgba(0,0,0,.12);
       position:absolute;
       bottom: 0;
@@ -257,12 +239,13 @@
     .mini-btn{
       border:none;
       cursor:pointer;
-      border-radius:10px;
-      padding:8px 10px;
-      font-size:.85rem;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:.9rem;
       background:#111;
       color:#fff;
       white-space:nowrap;
+      touch-action: manipulation;
     }
     .mini-btn:hover{ opacity:.92; }
 
@@ -293,7 +276,7 @@
       background:#fff;
       border-radius:12px;
       padding:8px;
-      min-height:72px;
+      min-height:78px;
       border:1px solid rgba(0,0,0,.06);
       box-sizing:border-box;
       font-size:.78rem;
@@ -303,7 +286,7 @@
     }
     .day-num{
       font-weight:900;
-      font-size:.9rem;
+      font-size:.95rem;
       margin-bottom:4px;
     }
     .badge{
@@ -316,6 +299,7 @@
       white-space:nowrap;
     }
     .meet-badge{ background:rgba(194,24,91,.10); }
+    .act-badge{ background:rgba(0, 128, 255, .10); } /* 활동 지부 뱃지 */
 
     /* ===== 스쿨 탭 ===== */
     .school-wrap{display:grid;gap:12px}
@@ -349,13 +333,14 @@
       cursor:pointer;
       user-select:none;
       font-size:1.05rem;
-      padding:4px 8px;
-      border-radius:10px;
+      padding:6px 10px;
+      border-radius:12px;
       background:rgba(0,0,0,.05);
       display:flex;
       align-items:center;
       justify-content:center;
-      min-width: 34px;
+      min-width: 38px;
+      touch-action: manipulation;
     }
     .slot-toggle:hover{ background:rgba(0,0,0,.08); }
     .tri{
@@ -363,14 +348,13 @@
       font-weight:900;
       line-height:1;
     }
-
     .slot-input{
       width:100%;
-      padding:10px 10px;
+      padding:12px 10px;
       border-radius:12px;
       border:1px solid rgba(0,0,0,.12);
       outline:none;
-      font-size:.92rem;
+      font-size:.95rem;
       background: rgba(245, 247, 255, 1);
     }
 
@@ -411,9 +395,11 @@
       justify-content:center;
       background:rgba(0,0,0,.55);
       z-index:9998;
+      padding: 14px;
+      box-sizing: border-box;
     }
     .modal{
-      width:min(420px, 92vw);
+      width:min(420px, 100%);
       background:#fff;
       border-radius:16px;
       padding:14px;
@@ -434,14 +420,35 @@
       margin-top:12px;
     }
     .modal .actions button{
-      padding:10px 12px;
+      padding:12px 12px;
       border-radius:12px;
       border:none;
       cursor:pointer;
-      font-size:.95rem;
+      font-size:1rem;
+      touch-action: manipulation;
     }
     .modal .actions .cancel{ background:#eee; }
     .modal .actions .ok{ background:#111; color:#fff; }
+
+    /* ===== 모바일 최적화 ===== */
+    @media (max-width: 520px){
+      header{ font-size:1.15rem; padding:14px; }
+      section{ padding:12px; }
+      .card{ padding:12px; margin-bottom:12px; }
+
+      nav{ justify-content:flex-start; }
+      nav button{ font-size:.95rem; padding:8px 10px; }
+
+      .row{ grid-template-columns: 1fr; }
+      .thermo-grid-wrap{ grid-template-columns: 1fr; } /* 3열 → 1열 */
+      .branch-thermo-card{ grid-template-columns: 1fr 84px; }
+
+      .month-calendar{ gap:4px; }
+      .day-cell{ min-height:66px; padding:7px; font-size:.75rem; }
+      .day-num{ font-size:.9rem; }
+
+      #schoolGrid{ grid-template-columns: repeat(2, 1fr); } /* 5열 → 2열 */
+    }
   </style>
 
   <script type="module">
@@ -469,7 +476,7 @@
 
     /* 관리자 모드 */
     const adminModeKey = "wol_admin_mode";
-    const adminPw = "adminPw"; // 요청 값
+    const adminPw = "adminPw";
     function isAdminMode(){ return localStorage.getItem(adminModeKey) === "1"; }
     function applyAdminModeUI(){
       document.body.classList.toggle("admin", isAdminMode());
@@ -487,8 +494,8 @@
       applyAdminModeUI();
     };
 
-    /* 누적 온도계 기준(요청) */
-    const TOTAL_CELLS = 300;         // 튜브 기준 최대칸(표시)
+    /* 누적 온도계 기준 */
+    const TOTAL_CELLS = 300;         // 튜브 격자 칸 수(20x15)
     const CHANT_CELL_MIN = 10;       // 1칸=10분
     const ACTIVITY_CELL = 2;         // 2칸=활동 1회
     const BULB_START_CELLS = 12;     // 벌브 먼저 차는 구간(UX)
@@ -539,6 +546,7 @@
       document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
       const el = $(id);
       if (el) el.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "auto" });
     };
 
     window.saveNickname = () => {
@@ -553,7 +561,6 @@
       window.showTab("chant");
       const sel = $("chantBranch");
       if (sel) sel.value = branch;
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     /* ===== 기록 저장 ===== */
@@ -614,7 +621,6 @@
         detail += `🌱 ${branch} - ${minutes}분 (${n})<br>`;
       });
 
-      // 오늘 요약은 기존처럼 20분 환산 유지(표시용)
       activitySnap.forEach(d => {
         const { branch, subject, target } = d.data();
         totalMin += 20;
@@ -631,19 +637,19 @@
       if (theme === "theme-yellow") return 48;
       return 330;
     }
-    function tubeGradient(theme){
+    function cellColor(theme, t) {
+      // t: 0(아래)~1(위) 느낌으로 가볍게 변화
       const hue = themeHue(theme);
-      return `linear-gradient(180deg, hsl(${hue} 70% 78%) 0%, hsl(${hue} 90% 52%) 55%, hsl(${hue} 95% 42%) 100%)`;
+      const sat = 92 - Math.round(t * 18);
+      const light = 46 + Math.round(t * 32);
+      return `hsl(${hue} ${sat}% ${light}%)`;
     }
     function bulbGradient(theme){
       const hue = themeHue(theme);
-      return `radial-gradient(circle at 30% 30%, hsl(${hue} 90% 70%) 0%, hsl(${hue} 95% 48%) 55%, hsl(${hue} 95% 40%) 100%)`;
+      return `radial-gradient(circle at 30% 30%, hsl(${hue} 90% 72%) 0%, hsl(${hue} 95% 50%) 55%, hsl(${hue} 95% 40%) 100%)`;
     }
 
-    /* ===== 누적 집계(칸 기준) =====
-       - 창제: minutes/10 칸
-       - 활동: 2칸/1회
-     */
+    /* ===== 누적 집계(칸 기준) ===== */
     async function computeCumulativeByBranchCells() {
       const chantMinByBranch = {};
       const actCountByBranch = {};
@@ -680,7 +686,6 @@
         if (dateKey) recentByBranch[branch].push(`${dateKey.slice(5)} 🔥 ${subject || ""}→${target || ""}`);
       });
 
-      // 회합: 지부 개념이 없으므로 최근 목록에만 전체 공지로 표시(원하시면 지부별 분리 가능)
       meetSnap.forEach(d => {
         const { dateKey, title, time, importance } = d.data();
         if (!dateKey) return;
@@ -690,21 +695,11 @@
         branches.forEach(b => recentByBranch[b].push(line));
       });
 
-      // 최신 우선 정렬(문자열 앞에 MM-DD가 있어 단순 내림차순)
       branches.forEach(b => {
         recentByBranch[b].sort((a, c) => (a < c ? 1 : -1));
       });
 
       return { chantMinByBranch, actCountByBranch, cellsByBranch, recentByBranch };
-    }
-
-    function computeBulbAndTube(cells){
-      // 벌브 먼저: 1칸 이상이면 벌브 채움 표시
-      const bulbFilled = cells > 0;
-      const tubeCells = Math.max(0, cells - BULB_START_CELLS);
-      const tubeCap = Math.max(1, TOTAL_CELLS - BULB_START_CELLS);
-      const pct = Math.min(100, Math.round((Math.min(tubeCells, tubeCap) / tubeCap) * 100));
-      return { bulbFilled, tubePct: pct };
     }
 
     function buildRecentHTML(items){
@@ -717,11 +712,39 @@
       `;
     }
 
+    /* ===== (요청) 튜브 300칸 격자 채움(아래→위) ===== */
+    function buildTubeGridHTML(filledCells, theme){
+      const total = TOTAL_CELLS;
+      const startFilledPos = total - filledCells + 1;
+
+      let html = `<div class="tube-grid">`;
+      for (let pos=1; pos<=total; pos++){
+        const isFilled = (filledCells > 0) && (pos >= startFilledPos);
+        if (!isFilled){
+          html += `<div class="cell"></div>`;
+        } else {
+          // 아래쪽이 진하게: pos가 클수록 아래에 가까움
+          const rankFromBottom = (total - pos);
+          const t = Math.min(1, Math.max(0, rankFromBottom / (total - 1)));
+          html += `<div class="cell" style="background:${cellColor(theme, t)};"></div>`;
+        }
+      }
+      html += `</div>`;
+      return html;
+    }
+
+    function computeBulbAndTube(cells){
+      const bulbFilled = cells > 0;
+      const tubeCells = Math.max(0, cells - BULB_START_CELLS);
+      const tubeCap = Math.max(1, TOTAL_CELLS - BULB_START_CELLS);
+      const scaled = Math.min(TOTAL_CELLS, Math.floor((tubeCells / tubeCap) * TOTAL_CELLS));
+      return { bulbFilled, tubeFilledCells: scaled };
+    }
+
     function renderThermometers(containerId, onClickBranch, selectOnly=false){
       return async () => {
         const container = $(containerId);
         if (!container) return;
-
         container.innerHTML = `<div class="small">집계 중...</div>`;
 
         const { chantMinByBranch, actCountByBranch, cellsByBranch, recentByBranch } =
@@ -738,11 +761,10 @@
             const actCnt = actCountByBranch[branch] || 0;
             const cells = Math.min(TOTAL_CELLS, cellsByBranch[branch] || 0);
 
-            const { bulbFilled, tubePct } = computeBulbAndTube(cells);
+            const { bulbFilled, tubeFilledCells } = computeBulbAndTube(cells);
 
             const card = document.createElement("div");
             card.className = "branch-thermo-card";
-
             card.innerHTML = `
               <div>
                 <div class="branch-thermo-title">
@@ -764,14 +786,13 @@
 
               <div class="thermo-frame ${colDef.theme}">
                 <div class="tube">
-                  <div class="tube-fill" style="height:${tubePct}%; background:${tubeGradient(colDef.theme)};"></div>
+                  ${buildTubeGridHTML(tubeFilledCells, colDef.theme)}
                 </div>
                 <div class="bulb ${bulbFilled ? "filled" : ""}">
                   <div class="bulb-fill" style="background:${bulbGradient(colDef.theme)};"></div>
                 </div>
               </div>
             `;
-
             card.onclick = () => onClickBranch(branch);
             col.appendChild(card);
           });
@@ -785,7 +806,6 @@
     const loadChantThermo = renderThermometers("chantThermoGrid", (branch)=>{
       const sel = $("chantBranch");
       if (sel) sel.value = branch;
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }, true);
 
     /* ===== 일정 탭: 활동 리스트 ===== */
@@ -820,7 +840,7 @@
       });
     }
 
-    /* ===== 회합 추가: 모달 ===== */
+    /* ===== 회합 모달 ===== */
     function openMeetingModal(){
       $("meetDate").value = todayKey;
       $("meetTitle").value = "";
@@ -840,7 +860,7 @@
       const time = $("meetTime").value.trim();
       const importance = $("meetImportance").value;
 
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return alert("회합 일정(날짜) 형식이 올바르지 않습니다. 예: 2026-01-16");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return alert("회합 일정(날짜) 형식 오류. 예: 2026-01-16");
       if (!title) return alert("회합명을 입력하세요.");
 
       await addDoc(collection(db, "meetings"), {
@@ -858,14 +878,15 @@
       await loadChantThermo();
     };
 
+    /* ===== (요청) 달력에 활동 ‘지부’ 표시 ===== */
     async function loadMonthCalendar() {
       const cal = $("monthCalendar");
       if (!cal) return;
       cal.innerHTML = "불러오는 중...";
 
-      const chantMinMap = {};
-      const actCountMap = {};
-      const meetingMap = {};
+      const chantMinMap = {};          // dateKey -> minutes sum
+      const actBranchMap = {};         // dateKey -> { branch: count }
+      const meetingMap = {};           // dateKey -> [meeting strings]
 
       const [chantSnap, actSnap, meetSnap] = await Promise.all([
         getDocs(collection(db, "chants")),
@@ -880,9 +901,11 @@
       });
 
       actSnap.forEach(d => {
-        const { dateKey } = d.data();
+        const { dateKey, branch } = d.data();
         if (!isInThisMonth(dateKey)) return;
-        actCountMap[dateKey] = (actCountMap[dateKey] || 0) + 1;
+        if (!actBranchMap[dateKey]) actBranchMap[dateKey] = {};
+        const b = branch || "미지정";
+        actBranchMap[dateKey][b] = (actBranchMap[dateKey][b] || 0) + 1;
       });
 
       meetSnap.forEach(d => {
@@ -917,17 +940,28 @@
         const dateKey = `${monthYear}-${String(monthIndex+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
 
         const chantMin = chantMinMap[dateKey] || 0;
-        const actCnt = actCountMap[dateKey] || 0;
+        const branchCounts = actBranchMap[dateKey] || null;
         const meetings = meetingMap[dateKey] || [];
+
+        // 지부별 활동 요약 문자열 생성 (최대 2개 + 외 n)
+        let actBadges = "";
+        if (branchCounts) {
+          const entries = Object.entries(branchCounts).sort((a,b)=>b[1]-a[1]);
+          const top2 = entries.slice(0,2);
+          actBadges = top2.map(([b,c]) => `<span class="badge act-badge">${escapeHtml(b)}×${c}</span>`).join("");
+          if (entries.length > 2) {
+            actBadges += `<div class="small" style="margin-top:4px;opacity:.85;">활동 외 ${entries.length-2}지부</div>`;
+          }
+        }
 
         const cell = document.createElement("div");
         cell.className = "day-cell";
         cell.innerHTML = `
           <div class="day-num">${day}</div>
           ${chantMin ? `<span class="badge">창제 ${chantMin}분</span>` : ``}
-          ${actCnt ? `<span class="badge">활동 ${actCnt}건</span>` : ``}
+          ${actBadges}
           ${meetings.length ? meetings.slice(0,2).map(t=>`<span class="badge meet-badge">회합 ${escapeHtml(t)}</span>`).join("") : ``}
-          ${meetings.length > 2 ? `<div class="small" style="margin-top:4px;">외 ${meetings.length-2}건</div>` : ``}
+          ${meetings.length > 2 ? `<div class="small" style="margin-top:4px;">회합 외 ${meetings.length-2}건</div>` : ``}
         `;
         cal.appendChild(cell);
       }
@@ -1101,8 +1135,18 @@
       applyAdminModeUI();
     }
 
+    /* 모달 외부 클릭 닫기 */
+    function bindModalOutsideClose(){
+      document.addEventListener("click", (e) => {
+        const layer = document.getElementById("modalLayer");
+        if (!layer || layer.style.display !== "flex") return;
+        if (e.target === layer) layer.style.display = "none";
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", async () => {
       applyAdminModeUI();
+      bindModalOutsideClose();
 
       if (!nickname) {
         $("nicknameLayer").style.display = "flex";
@@ -1115,14 +1159,48 @@
       fillBranchOptions($("activityBranch"), "지부 선택");
       fillBranchOptions($("schoolBranchSelect"), "지부 선택");
 
-      if (nickname) await refreshAll();
-
       $("schoolBranchSelect").addEventListener("change", async (e) => {
         const branch = e.target.value;
         await loadThermometerForSchoolBranch(branch);
         await loadSchoolGrid(branch);
       });
+
+      if (nickname) await refreshAll();
     });
+
+    /* 회합 모달 함수들(HTML onclick용) */
+    window.openMeetingModal = () => {
+      $("meetDate").value = todayKey;
+      $("meetTitle").value = "";
+      $("meetTime").value = "";
+      $("meetImportance").value = "보통";
+      $("modalLayer").style.display = "flex";
+    };
+    window.closeMeetingModal = () => { $("modalLayer").style.display = "none"; };
+
+    window.saveMeetingFromModal = async () => {
+      const dateKey = $("meetDate").value.trim();
+      const title = $("meetTitle").value.trim();
+      const time = $("meetTime").value.trim();
+      const importance = $("meetImportance").value;
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return alert("회합 일정(날짜) 형식 오류. 예: 2026-01-16");
+      if (!title) return alert("회합명을 입력하세요.");
+
+      await addDoc(collection(db, "meetings"), {
+        dateKey,
+        title,
+        time: time || "",
+        importance: importance || "보통",
+        createdAt: serverTimestamp()
+      });
+
+      window.closeMeetingModal();
+      alert("회합 일정이 추가되었습니다.");
+      await loadMonthCalendar();
+      await loadHomeThermo();
+      await loadChantThermo();
+    };
   </script>
 </head>
 
@@ -1154,7 +1232,6 @@
 
   <!-- CHANT -->
   <section id="chant">
-    <!-- (요청) 창제 입력을 상단 배치 -->
     <div class="card">
       <div class="row">
         <select id="chantBranch"></select>
@@ -1210,7 +1287,7 @@
       <div class="card-header">
         <div>
           <strong>이달의 달력</strong>
-          <div class="hint small">창제(분) · 활동(건) · 회합(일정)</div>
+          <div class="hint small">창제(분) · 활동(지부별) · 회합(일정)</div>
         </div>
         <button class="mini-btn" onclick="openMeetingModal()">+ 회합</button>
       </div>
@@ -1285,13 +1362,5 @@
     </div>
   </div>
 
-  <script>
-    // 모달 외부 클릭 닫기(UX)
-    document.addEventListener("click", (e) => {
-      const layer = document.getElementById("modalLayer");
-      if (!layer || layer.style.display !== "flex") return;
-      if (e.target === layer) layer.style.display = "none";
-    });
-  </script>
 </body>
 </html>
