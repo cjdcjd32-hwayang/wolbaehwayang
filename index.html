@@ -1,211 +1,215 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>🌸 Wolbaehwayang</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>월배권 보은의 여자부</title>
 
-<style>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #fafafa;
-  padding: 16px;
-  margin: 0;
-}
-h1, h2, h3 { margin-top: 0; }
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-input, select, button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 8px;
-  font-size: 16px;
-}
-button {
-  background: #ffb7c5;
-  border: none;
-  border-radius: 8px;
-}
-button.admin {
-  background: #ddd;
-}
-.hidden { display: none; }
+  <!-- 배경 & 기본 스타일 -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee') center/cover no-repeat fixed;
+      color: #222;
+    }
+    header {
+      text-align: center;
+      padding: 20px;
+      background: rgba(255,255,255,0.8);
+    }
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(255,255,255,0.9);
+      position: sticky;
+      top: 0;
+    }
+    nav button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: none;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    section {
+      display: none;
+      padding: 16px;
+      background: rgba(255,255,255,0.85);
+      margin: 12px;
+      border-radius: 12px;
+    }
+    section.active { display: block; }
 
-.thermo {
-  height: 180px;
-  width: 36px;
-  border-radius: 18px;
-  background: #eee;
-  overflow: hidden;
-  margin: 12px auto;
-}
-.fill {
-  width: 100%;
-  height: 0%;
-  background: linear-gradient(to top, #ff4d4d, #ffd84d, #4da6ff);
-  transition: height 0.4s;
-}
+    /* 온도계 */
+    .thermometer {
+      width: 60px;
+      height: 260px;
+      border: 3px solid #555;
+      border-radius: 30px;
+      margin: 0 auto;
+      position: relative;
+      background: #fff;
+      overflow: hidden;
+    }
+    .thermo-fill {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, #1e90ff, #ffd700, #ff4500);
+      transition: height 0.5s;
+    }
+    .thermo-lines {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        to top,
+        transparent,
+        transparent 18px,
+        rgba(0,0,0,0.15) 19px
+      );
+      pointer-events: none;
+    }
 
-.rank-item {
-  display: flex;
-  justify-content: space-between;
-  margin: 6px 0;
-}
-</style>
+    .branch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 16px;
+    }
+    .branch-card {
+      text-align: center;
+    }
+
+    /* 입력 */
+    input, select, button {
+      padding: 10px;
+      margin: 6px 0;
+      width: 100%;
+      font-size: 14px;
+    }
+    .admin { border: 2px dashed #c00; padding: 12px; }
+  </style>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
+      authDomain: "wolbaehwayang-d1787.firebaseapp.com",
+      projectId: "wolbaehwayang-d1787"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    /* 탭 */
+    window.showTab = (id) => {
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    };
+
+    /* 닉네임 */
+    window.saveNickname = async () => {
+      const nick = document.getElementById('nicknameInput').value.trim();
+      if (!nick) return alert('닉네임 입력');
+      localStorage.setItem('nickname', nick);
+      await setDoc(doc(db, 'users', nick), { nickname: nick, createdAt: serverTimestamp() }, { merge: true });
+      alert('입장 완료');
+    };
+
+    /* 창제 기록 (1일 3회 제한) */
+    window.saveChant = async () => {
+      const nick = localStorage.getItem('nickname');
+      if (!nick) return alert('닉네임 필요');
+      const branch = document.getElementById('branch').value;
+      const minutes = Number(document.getElementById('minutes').value);
+      const today = new Date().toISOString().slice(0,10);
+
+      const q = query(collection(db, 'chants'), where('nickname','==',nick), where('date','==',today));
+      const snap = await getDocs(q);
+      if (snap.size >= 3) return alert('하루 3회 제한');
+
+      await addDoc(collection(db,'chants'),{
+        nickname:nick,
+        branch,
+        minutes,
+        blocks: minutes===10?1:2,
+        date: today,
+        createdAt: serverTimestamp()
+      });
+      alert('저장 완료');
+    };
+
+    /* 관리자 월별 리셋 (표시용) */
+    window.adminReset = () => {
+      const code = prompt('RESET 입력');
+      if (code==='RESET') alert('관리자 리셋 실행 (Firestore에서 월별 문서 삭제)');
+    };
+
+  </script>
 </head>
-
 <body>
 
-<h1>🌸 Wolbaehwayang</h1>
+<header>
+  <h1>🌸 월배권 보은의 여자부</h1>
+</header>
 
-<!-- 로그인 -->
-<div class="card" id="loginCard">
-  <h3>닉네임</h3>
-  <input id="nicknameInput" placeholder="닉네임 입력">
-  <button id="loginBtn">입장</button>
-</div>
+<nav>
+  <button onclick="showTab('home')">홈</button>
+  <button onclick="showTab('chant')">🌱 창제</button>
+  <button onclick="showTab('activity')">활동</button>
+  <button onclick="showTab('schedule')">일정</button>
+  <button onclick="showTab('school')">스쿨</button>
+  <button onclick="showTab('admin')">관리자</button>
+</nav>
 
-<!-- 관리자 -->
-<div class="card">
-  <h3>관리자 로그인</h3>
-  <input id="adminPw" type="password" placeholder="관리자 비밀번호">
-  <button class="admin" id="adminLoginBtn">관리자 입장</button>
-</div>
+<section id="home" class="active">
+  <h2>지부별 온도계</h2>
+  <div class="branch-grid">
+    <div class="branch-card">
+      <p>달비</p>
+      <div class="thermometer"><div class="thermo-fill" style="height:40%"></div><div class="thermo-lines"></div></div>
+    </div>
+    <div class="branch-card">
+      <p>상인</p>
+      <div class="thermometer"><div class="thermo-fill" style="height:65%"></div><div class="thermo-lines"></div></div>
+    </div>
+  </div>
+</section>
 
-<!-- 창제 -->
-<div class="card hidden" id="chantCard">
-  <h3>🌸 창제 기록</h3>
-  <select id="branch">
-    <option value="">지부 선택</option>
-    <option>달비</option><option>상인</option><option>원덕</option>
-    <option>대곡</option><option>월배</option><option>유천</option>
-    <option>진천</option><option>영남</option><option>옥포</option><option>화원</option>
-  </select>
-  <select id="time">
-    <option value="">시간</option>
-    <option value="10">10분</option>
-    <option value="30">30분</option>
-    <option value="60">1시간</option>
-  </select>
-  <button id="saveChant">저장</button>
-</div>
+<section id="chant">
+  <h2>🌱 창제 기록</h2>
+  <input id="nicknameInput" placeholder="닉네임" />
+  <button onclick="saveNickname()">닉네임 저장</button>
+  <select id="branch"><option>달비</option><option>상인</option></select>
+  <select id="minutes"><option value="10">10분</option><option value="30">30분</option></select>
+  <button onclick="saveChant()">기록 저장</button>
+</section>
 
-<!-- 오늘 -->
-<div class="card">
-  <h3>오늘의 온도계</h3>
-  <p>총 <strong id="todayBlocks">0</strong> 칸</p>
-  <div class="thermo"><div class="fill" id="todayFill"></div></div>
-</div>
+<section id="activity">
+  <h2>활동 기록</h2>
+  <p>닉네임 + 대상자 입력 방식 (구현 확장 가능)</p>
+</section>
 
-<!-- 월간 -->
-<div class="card">
-  <h3>월간 온도계</h3>
-  <p>총 <strong id="monthBlocks">0</strong> 칸</p>
-  <div class="thermo"><div class="fill" id="monthFill"></div></div>
-</div>
+<section id="schedule">
+  <h2>이달의 일정</h2>
+  <p>전체 사용자 창제 합산 달력 영역</p>
+</section>
 
-<!-- 지부 합계 -->
-<div class="card">
-  <h3>지부별 합계</h3>
-  <div id="branchStats"></div>
-</div>
+<section id="school">
+  <h2>스쿨</h2>
+  <p>교육 / 공지 탭</p>
+</section>
 
-<!-- 랭킹 -->
-<div class="card">
-  <h3>🏆 전체 랭킹</h3>
-  <div id="ranking"></div>
-</div>
-
-<!-- 관리자 패널 -->
-<div class="card hidden" id="adminPanel">
-  <h3>관리자 설정</h3>
-  <button class="admin" id="resetToday">오늘 리셋</button>
-  <button class="admin" id="resetMonth">월간 리셋</button>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, query, where
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
-  authDomain: "wolbaehwayang-d1787.firebaseapp.com",
-  projectId: "wolbaehwayang-d1787"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const nicknameKey = "nickname";
-const adminKey = "admin";
-
-const loginBtn = document.getElementById("loginBtn");
-const chantCard = document.getElementById("chantCard");
-
-loginBtn.onclick = () => {
-  const name = nicknameInput.value.trim();
-  if (!name) return;
-  localStorage.setItem(nicknameKey, name);
-  chantCard.classList.remove("hidden");
-};
-
-adminLoginBtn.onclick = () => {
-  if (adminPw.value === "1234") {
-    localStorage.setItem(adminKey, "true");
-    adminPanel.classList.remove("hidden");
-  }
-};
-
-saveChant.onclick = async () => {
-  const name = localStorage.getItem(nicknameKey);
-  const minutes = Number(time.value);
-  if (!name || !minutes) return;
-
-  await addDoc(collection(db, "chants"), {
-    nickname: name,
-    branch: branch.value,
-    blocks: minutes / 10,
-    date: new Date().toISOString().slice(0,7)
-  });
-  loadAll();
-};
-
-async function loadAll() {
-  const snap = await getDocs(collection(db, "chants"));
-  let today = 0, month = 0;
-  let branchSum = {}, userSum = {};
-
-  snap.forEach(d => {
-    const b = d.data().blocks;
-    today += b;
-    month += b;
-    branchSum[d.data().branch] = (branchSum[d.data().branch] || 0) + b;
-    userSum[d.data().nickname] = (userSum[d.data().nickname] || 0) + b;
-  });
-
-  todayBlocks.innerText = today;
-  monthBlocks.innerText = month;
-  todayFill.style.height = Math.min(today*5,100)+"%";
-  monthFill.style.height = Math.min(month*3,100)+"%";
-
-  branchStats.innerHTML = Object.entries(branchSum)
-    .map(([k,v]) => `<div>${k}: ${v}칸</div>`).join("");
-
-  ranking.innerHTML = Object.entries(userSum)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([k,v],i)=>`<div class="rank-item">${i+1}. ${k}<span>${v}</span></div>`)
-    .join("");
-}
-
-loadAll();
-</script>
+<section id="admin" class="admin">
+  <h2>관리자 패널</h2>
+  <button onclick="adminReset()">월별 리셋</button>
+</section>
 
 </body>
 </html>
