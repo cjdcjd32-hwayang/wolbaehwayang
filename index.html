@@ -307,6 +307,10 @@
     .meet-badge{ background:rgba(194,24,91,.10); }
     .act-badge{ background:rgba(0, 128, 255, .10); }
     .more-hint{ display:none; font-size:.72rem; opacity:.78; margin-top:4px; }
+    .act-done{ background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.35); }
+    .act-todo{ background:rgba(251,146,60,.12); border:1px solid rgba(251,146,60,.35); }
+
+    
 
     @media (max-width: 520px){
       .month-calendar{ gap:4px; }
@@ -519,6 +523,9 @@
       padding:10px 12px;
       background:#fff;
       cursor:pointer;
+
+      <button class="mini-btn light" data-edit="${it.id}">수정</button>
+      div.querySelector(`[data-edit="${it.id}"]`).onclick = (e)=>{ e.stopPropagation(); openSpeechEdit(it.id); };
     }
     .speech-item:hover{ box-shadow: var(--shadow); }
     .speech-item-top{
@@ -856,7 +863,7 @@
       if (snap.size >= 3) return alert("하루 3회 제한입니다.");
 
       await addDoc(collection(db,"chants"),{
-        nickname, branch, minutes,
+        nickname, branch, minutes, time,
         blocks: minutes/10,
         dateKey: todayKey,
         createdAt: serverTimestamp(),
@@ -981,12 +988,53 @@
           <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <button class="mini-btn ${done ? "light" : ""}" data-toggle="${it.id}">${done ? "완료 해제" : "실행 완료"}</button>
             <button class="mini-btn light" data-del="${it.id}">삭제</button>
+          <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <button class="mini-btn light" data-edit="${it.id}">수정</button>
+            <button class="mini-btn ${done ? "light" : ""}" data-toggle="${it.id}">${done ? "완료 해제" : "실행 완료"}</button>
+            <button class="mini-btn light" data-del="${it.id}">삭제</button>
           </div>
         `;
         box.appendChild(div);
 
-        div.querySelector(`[data-toggle="${it.id}"]`).onclick = async ()=>{
-          const newDone = !done;
+        div.querySelector(`[data-edit="${it.id}"]`).onclick = async ()=>{
+          const newDate = prompt("날짜(YYYY-MM-DD)", it.plannedDateKey || "");
+          if (newDate === null) return;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate.trim())) return alert("날짜 형식 오류(YYYY-MM-DD)");
+
+          const newTime = prompt("시간(예: 19:30) (선택)", it.time || "");
+          if (newTime === null) return;
+
+          const newBranch = prompt("지부", it.branch || "");
+          if (newBranch === null) return;
+          if (!newBranch.trim()) return alert("지부는 비울 수 없습니다.");
+
+          const newSubject = prompt("주체자", it.subject || "");
+          if (newSubject === null) return;
+          if (!newSubject.trim()) return alert("주체자는 비울 수 없습니다.");
+
+          const newTarget = prompt("대상자", it.target || "");
+          if (newTarget === null) return;
+          if (!newTarget.trim()) return alert("대상자는 비울 수 없습니다.");
+
+          const newMethod = prompt("활동 방법(선택)", it.method || "");
+          if (newMethod === null) return;
+
+          try{
+            await updateDoc(it.ref, {
+              plannedDateKey: newDate.trim(),
+              time: newTime.trim(),
+              branch: newBranch.trim(),
+              subject: newSubject.trim(),
+              target: newTarget.trim(),
+              method: (newMethod||"").trim(),
+              updatedAt: serverTimestamp()
+            });
+            await refreshAll();
+          }catch(e){
+            alert("수정 실패: " + (e?.message || e));
+          }
+        };
+
           try{
             await updateDoc(it.ref, {
               isDone: newDone,
@@ -1164,8 +1212,7 @@
             ${actsAll.length ? actsAll.map(it=>{
               const done = it.isDone === true;
               const badge = done ? "✅완료" : "☐미실행";
-              return `<div class="small">• ${badge} · ${esc(it.branch||"")} · ${esc(it.subject||"")} → ${esc(it.target||"")}${it.method?` · ${esc(it.method)}`:""}</div>`;
-            }).join("") : `<div class="small">기록 없음</div>`}
+              return `<div class="small">• ${badge} · ${esc(it.branch||"")} · ${esc(it.subject||"")} → ${esc(it.target||"")}${it.time?` · ${esc(it.time)}`:""}${it.method?` · ${esc(it.method)}`:""}</div>`; : `<div class="small">기록 없음</div>`}
           </div>
 
           <div class="detail-block">
@@ -1304,23 +1351,40 @@
       await buildMonthCache();
 
       const chantMinMap = {};
-      const actBranchMapDone = {};
       const meetCountMap = {};
+      const actBranchMap = {}; // dateKey -> { done:{branch:cnt}, todo:{branch:cnt} }
 
-      Object.entries(cachedDayData.chantsByDate).forEach(([k,arr])=>{
-        chantMinMap[k] = arr.reduce((s,it)=> s+(Number(it.minutes)||0), 0);
+    Object.entries(cachedDayData.activitiesByDate).forEach(([k,arr])=>{
+      const done = {};
+      const todo = {};
+      arr.forEach(it=>{
+        const b = it.branch || "미지정";
+        if (it.isDone === true) done[b] = (done[b]||0)+1;
+        else todo[b] = (todo[b]||0)+1;
       });
+      actBranchMap[k] = { done, todo };
+    });
 
-      // ✅ 완료된 활동만 달력 표시에 포함
-      Object.entries(cachedDayData.activitiesByDate).forEach(([k,arr])=>{
-        const m = {};
-        arr.forEach(it=>{
-          if (it.isDone !== true) return;
-          const b = it.branch || "미지정";
-          m[b] = (m[b]||0)+1;
-        });
-        actBranchMapDone[k] = m;
-      });
+      const pack = actBranchMap[dateKey] || { done:{}, todo:{} };
+      const doneEntries = Object.entries(pack.done).sort((a,b)=>b[1]-a[1]);
+      const todoEntries = Object.entries(pack.todo).sort((a,b)=>b[1]-a[1]);
+
+      // 모바일/PC 표시 개수 제한(기존 take 로직 재사용)
+      const take = mobileView ? 1 : 2;
+
+    // ✅ 완료 배지
+    const doneTop = doneEntries.slice(0, take);
+    let doneBadges = doneTop.map(([b,c])=>`<span class="badge act-badge act-done">✅ ${esc(b)}×${c}</span>`).join("");
+
+    // ☐ 미완료 배지
+    const todoTop = todoEntries.slice(0, take);
+    let todoBadges = todoTop.map(([b,c])=>`<span class="badge act-badge act-todo">☐ ${esc(b)}×${c}</span>`).join("");
+
+    actBadges = doneBadges + todoBadges;
+
+    // 더보기 계산(둘 합산 기준)
+    hiddenCount = Math.max(0, (doneEntries.length - take)) + Math.max(0, (todoEntries.length - take));
+
 
       Object.entries(cachedDayData.meetingsByDate).forEach(([k,arr])=>{
         meetCountMap[k] = arr.length;
@@ -2013,6 +2077,9 @@
       <input id="activityDateKey" placeholder="활동 날짜(YYYY-MM-DD)" />
       <div style="height:10px;"></div>
 
+      <input id="activityDateKey" placeholder="시간(예: 19:30) (선택)" />
+      <div style="height:10px;"></div>
+      
       <input id="activitySubject" placeholder="주체자" />
       <div style="height:10px;"></div>
 
@@ -2023,6 +2090,7 @@
       <div style="height:12px;"></div>
 
       <button class="btn" onclick="saveActivity()">활동 계획 추가</button>
+        const time = ($("activityTime").value || "").trim();
     </div>
 
     <div class="card">
@@ -2205,6 +2273,7 @@
   </script>
 </body>
 </html>
+
 
 
 
