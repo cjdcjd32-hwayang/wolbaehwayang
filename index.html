@@ -1604,10 +1604,46 @@
         if (isAdminMode()){
           const btn = div.querySelector(`[data-edit="${it.id}"]`);
           if (btn){
-            btn.onclick = (e)=>{ e.stopPropagation(); editSchoolSchedule(it.id, it); };
+            btn.onclick = (e)=>{ 
+              e.stopPropagation();
+              openSchoolScheduleEditMenu(it.id, it); 
+            };
           }
         }
       });
+    }
+
+    async function openSchoolScheduleEditMenu(id, current){
+      if (!isAdminMode()) return alert("관리자 모드에서만 가능합니다.");
+
+      // 1) 메뉴 선택
+      const action = prompt(
+        "작업 선택: 1=수정, 2=삭제, (취소는 빈칸/Cancel)\n" +
+        `대상: ${current.dateKey || ""} · ${current.title || ""}`
+      );
+
+      if (action === null || action.trim() === "") return;
+
+      // 2) 삭제
+      if (action.trim() === "2"){
+        if (!confirm("이 스쿨 일정을 삭제할까요?")) return;
+        try{
+          await deleteDoc(doc(db,"schoolSchedules", id));
+          alert("삭제 완료");
+          await loadSchoolMonthSchedule();
+        }catch(e){
+          alert("삭제 실패: " + (e?.message || e));
+        }
+        return;
+      }
+
+      // 3) 수정(기존 로직 재사용)
+      if (action.trim() === "1"){
+        await editSchoolSchedule(id, current);
+        return;
+      }  
+
+      alert("잘못된 입력입니다. 1 또는 2만 입력하세요.");
     }
 
     window.addSchoolSchedule = async () => {
@@ -2169,5 +2205,6 @@
   </script>
 </body>
 </html>
+
 
 
