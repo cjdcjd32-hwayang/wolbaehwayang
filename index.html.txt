@@ -3,109 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <title>Wolbaehwayang</title>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 </head>
+
 <body>
-
 <h1>🌱 Wolbaehwayang</h1>
-<p>Firebase Hosting 연결 테스트 성공</p>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
-    authDomain: "wolbaehwayang-d1787.firebaseapp.com",
-    projectId: "wolbaehwayang-d1787"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-</script>
-
-</body>
 <div id="nicknameBox">
-<h2>닉네임 입력</h2>
-
-<input
-  type="text"
-  id="nicknameInput"
-  placeholder="닉네임을 입력하세요"
-  maxlength="10"
-/>
-
-<button id="saveNicknameBtn">입장하기</button>
-
-<p id="statusMsg"></p>
+  <h2>닉네임 입력</h2>
+  <input id="nicknameInput" placeholder="닉네임 입력" maxlength="10">
+  <button id="saveNicknameBtn">입장하기</button>
+  <p id="statusMsg"></p>
 </div>
-
-<script type="module">
-const savedNickname = localStorage.getItem("wolbaehwayang_nickname");
-
-if (savedNickname) {
-  document.getElementById("nicknameBox").style.display = "none";
-  console.log("자동 입장:", savedNickname);
-}
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const savedNickname = localStorage.getItem("wolbaehwayang_nickname");
-if (savedNickname) {
-  document.getElementById("nicknameBox").style.display = "none";
-}
-
-localStorage.setItem("wolbaehwayang_nickname", nickname);
-document.getElementById("nicknameBox").style.display = "none";
-
-
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-  // 🔐 Firebase 설정
-  const firebaseConfig = {
-    apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
-    authDomain: "wolbaehwayang-d1787.firebaseapp.com",
-    projectId: "wolbaehwayang-d1787"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  console.log("🔥 Firebase 연결 완료")
-
-  const input = document.getElementById("nicknameInput");
-  const btn = document.getElementById("saveNicknameBtn");
-  const msg = document.getElementById("statusMsg");
-
-  btn.addEventListener("click", async () => {
-    const nickname = input.value.trim();
-
-    if (!nickname) {
-      msg.innerText = "닉네임을 입력해주세요.";
-      msg.style.color = "red";
-      return;
-    }
-
-    try {
-      await setDoc(doc(db, "users", nickname), {
-        nickname: nickname,
-        createdAt: new Date()
-      });
-
-      // 🔒 브라우저에 저장 (로그인 대용)
-      localStorage.setItem("wolbaehwayang_nickname", nickname);
-
-      msg.innerText = "입장 완료!";
-      msg.style.color = "green";
-
-    } catch (e) {
-      msg.innerText = "저장 실패. 다시 시도해주세요.";
-      msg.style.color = "red";
-      console.error(e);
-    }
-  });
-</script>
 
 <hr>
 
@@ -133,57 +41,76 @@ document.getElementById("nicknameBox").style.display = "none";
 </select>
 
 <button id="saveChantBtn">창제 기록 저장</button>
-
 <p id="chantMsg"></p>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } 
+    from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-import { collection, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
+    authDomain: "wolbaehwayang-d1787.firebaseapp.com",
+    projectId: "wolbaehwayang-d1787"
+  };
 
-const chantBtn = document.getElementById("saveChantBtn");
-const chantMsg = document.getElementById("chantMsg");
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-chantBtn.addEventListener("click", async () => {
-  const nickname = localStorage.getItem("wolbaehwayang_nickname");
-  const branch = document.getElementById("branchSelect").value;
-  const minutes = document.getElementById("timeSelect").value;
+  console.log("🔥 Firebase 연결 완료");
 
-  if (!nickname) {
-    chantMsg.innerText = "닉네임 정보가 없습니다. 새로고침 후 다시 입력해주세요.";
-    chantMsg.style.color = "red";
-    return;
+  // 닉네임 자동 입장
+  const savedNickname = localStorage.getItem("wolbaehwayang_nickname");
+  if (savedNickname) {
+    document.getElementById("nicknameBox").style.display = "none";
   }
 
-  if (!branch || !minutes) {
-    chantMsg.innerText = "지부와 시간을 선택해주세요.";
-    chantMsg.style.color = "red";
-    return;
-  }
+  // 닉네임 저장
+  document.getElementById("saveNicknameBtn").addEventListener("click", async () => {
+    const nickname = document.getElementById("nicknameInput").value.trim();
+    const msg = document.getElementById("statusMsg");
 
-  try {
-    await addDoc(collection(db, "chants"), {
-      nickname: nickname,
-      branch: branch,
-      minutes: Number(minutes),
-      blocks: Number(minutes) / 10, // 🔥 온도계 칸
-      createdAt: new Date()
+    if (!nickname) {
+      msg.innerText = "닉네임을 입력해주세요.";
+      msg.style.color = "red";
+      return;
+    }
+
+    await setDoc(doc(db, "users", nickname), {
+      nickname,
+      createdAt: serverTimestamp()
     });
 
-    chantMsg.innerText = "창제 기록이 저장되었습니다 🌱";
+    localStorage.setItem("wolbaehwayang_nickname", nickname);
+    msg.innerText = "입장 완료!";
+    msg.style.color = "green";
+    document.getElementById("nicknameBox").style.display = "none";
+  });
+
+  // 창제 기록
+  document.getElementById("saveChantBtn").addEventListener("click", async () => {
+    const nickname = localStorage.getItem("wolbaehwayang_nickname");
+    const branch = document.getElementById("branchSelect").value;
+    const minutes = Number(document.getElementById("timeSelect").value);
+    const chantMsg = document.getElementById("chantMsg");
+
+    if (!nickname || !branch || !minutes) {
+      chantMsg.innerText = "닉네임, 지부, 시간을 모두 선택하세요.";
+      chantMsg.style.color = "red";
+      return;
+    }
+
+    await addDoc(collection(db, "chants"), {
+      nickname,
+      branch,
+      minutes,
+      blocks: minutes / 10,
+      createdAt: serverTimestamp()
+    });
+
+    chantMsg.innerText = "창제 기록 저장 완료 🌱";
     chantMsg.style.color = "green";
-
-  } catch (e) {
-    chantMsg.innerText = "저장 실패. 다시 시도해주세요.";
-    chantMsg.style.color = "red";
-    console.error(e);
-  }
-});
-
-
-
+  });
+</script>
+</body>
 </html>
-
-
-
-
-
-
