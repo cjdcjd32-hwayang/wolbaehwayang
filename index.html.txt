@@ -72,6 +72,7 @@ document.getElementById("nicknameBox").style.display = "none";
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  console.log("🔥 Firebase 연결 완료")
 
   const input = document.getElementById("nicknameInput");
   const btn = document.getElementById("saveNicknameBtn");
@@ -180,6 +181,7 @@ chantBtn.addEventListener("click", async () => {
 
 
 </html>
+
 
 
 
