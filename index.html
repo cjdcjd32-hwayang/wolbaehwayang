@@ -1555,6 +1555,16 @@
     };
 
     /* ===== 스쿨: 이달 일정 (저장 실패 원인 노출) ===== */
+
+    const nextMonthYear = (monthIndex === 11) ? (monthYear + 1) : monthYear;
+    const nextMonthIndex = (monthIndex === 11) ? 0 : (monthIndex + 1);
+    const nextMonthKeyPrefix = `${nextMonthYear}-${String(nextMonthIndex+1).padStart(2,"0")}-`;
+
+    function isInThisMonthOrNextMonth(dateKey){
+      return typeof dateKey === "string" &&
+        (dateKey.startsWith(monthKeyPrefix) || dateKey.startsWith(nextMonthKeyPrefix));
+    }
+
     async function loadSchoolMonthSchedule(){
       const list = $("schoolMonthScheduleList");
       if (!list) return;
@@ -1565,8 +1575,11 @@
       const items = [];
       snap.forEach(d=>{
        const x = d.data();
-        if (isInThisMonthOrNextMonth(x.dateKey)) items.push({ id: d.id, ...x });
+       if (x.dateKey && isInThisMonthOrNextMonth(x.dateKey)) {
+         items.push({ id: d.id, ...x });
+       }
       });
+
       items.sort((a,b)=> (a.dateKey||"").localeCompare(b.dateKey||""));
 
       if (items.length === 0){
@@ -2156,4 +2169,5 @@
   </script>
 </body>
 </html>
+
 
