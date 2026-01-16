@@ -57,10 +57,6 @@
       z-index:9999;
     }
 
-    /* 일정 달력 */
-    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-    .calendar-day{background:#fff;border-radius:8px;padding:6px;font-size:.75rem;text-align:center}
-
     /* 공통 입력 */
     select, input{
       width:100%;
@@ -103,7 +99,7 @@
       padding:12px;
       border:1px solid rgba(0,0,0,.06);
       display:grid;
-      grid-template-columns: 1fr 70px; /* 좌: 정보, 우: 온도계 */
+      grid-template-columns: 1fr 86px; /* 우측 온도계 프레임 자리 확보 */
       gap: 10px;
       align-items: stretch;
     }
@@ -120,20 +116,59 @@
       line-height: 1.35;
     }
 
-    /* ===== “아래→위 채움” 300칸(20x15) 세로 온도계 ===== */
-    .thermo{
-      width: 70px;
-      height: 210px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.06);
-      padding: 6px;
-      box-sizing: border-box;
+    /* ===== 실제 온도계 모양 프레임 ===== */
+    .thermo-frame{
+      width: 86px;
+      height: 240px;
       position: relative;
-      overflow: hidden;
       display:flex;
-      align-items: stretch;
+      align-items: flex-start;
       justify-content: center;
+      box-sizing: border-box;
     }
+
+    /* 튜브 */
+    .tube{
+      width: 58px;
+      height: 190px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.8);
+      border: 2px solid rgba(0,0,0,.12);
+      box-shadow: inset 0 0 0 6px rgba(0,0,0,.04);
+      position: relative;
+      z-index: 2;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 8px;
+      box-sizing: border-box;
+      overflow:hidden;
+    }
+
+    /* 벌브(아래 동그라미) */
+    .bulb{
+      width: 78px;
+      height: 78px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      border: 2px solid rgba(0,0,0,.12);
+      box-shadow: inset 0 0 0 8px rgba(0,0,0,.04);
+      position:absolute;
+      bottom: 0;
+      z-index: 1;
+    }
+
+    /* 프레임 색상 테마 */
+    .theme-blue .tube{ box-shadow: inset 0 0 0 6px rgba(0,128,255,.10); }
+    .theme-blue .bulb{ box-shadow: inset 0 0 0 8px rgba(0,128,255,.10); }
+
+    .theme-yellow .tube{ box-shadow: inset 0 0 0 6px rgba(255,193,7,.14); }
+    .theme-yellow .bulb{ box-shadow: inset 0 0 0 8px rgba(255,193,7,.14); }
+
+    .theme-pink .tube{ box-shadow: inset 0 0 0 6px rgba(194,24,91,.12); }
+    .theme-pink .bulb{ box-shadow: inset 0 0 0 8px rgba(194,24,91,.12); }
+
+    /* ===== 300칸(20x15) 격자: 아래→위 채움 ===== */
     .thermo-grid{
       width: 100%;
       height: 100%;
@@ -141,36 +176,148 @@
       grid-template-columns: repeat(20, 1fr);
       grid-template-rows: repeat(15, 1fr);
       gap: 1px;
-      background: rgba(0,0,0,.04); /* 격자 간극 배경 */
-      border-radius: 10px;
-      padding: 1px;
+      background: rgba(0,0,0,.05);
+      border-radius: 12px;
+      padding: 2px;
       box-sizing: border-box;
     }
     .cell{
       background: rgba(255,255,255,.55);
       border-radius: 1px;
     }
-    .cell.filled{
-      /* JS에서 개별 색상 인라인 적용 */
-      background: #ff6aa2;
+    .cell.filled{ background:#999; } /* JS에서 인라인 색상 부여 */
+
+    /* ===== 일정 달력(이달 전용) ===== */
+    .month-calendar{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .weekday{
+      font-size:.78rem;
+      font-weight:800;
+      text-align:center;
+      opacity:.8;
+      padding: 4px 0;
+    }
+    .day-cell{
+      background:#fff;
+      border-radius:12px;
+      padding:8px;
+      min-height:72px;
+      border:1px solid rgba(0,0,0,.06);
+      box-sizing:border-box;
+      font-size:.78rem;
+      line-height:1.25;
+      position:relative;
+      overflow:hidden;
+    }
+    .day-num{
+      font-weight:900;
+      font-size:.9rem;
+      margin-bottom:4px;
+    }
+    .badge{
+      display:inline-block;
+      padding:2px 6px;
+      border-radius:999px;
+      background:rgba(0,0,0,.06);
+      margin:2px 4px 0 0;
+      font-size:.74rem;
+      white-space:nowrap;
+    }
+    .meet-badge{
+      background:rgba(194,24,91,.10);
     }
 
-    /* 스쿨(지부 선택+20칸 토글) */
-    .school-wrap{display:grid;gap:12px}
-    #schoolGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-    .school-member{
+    /* 일정 탭: 헤더(우측 상단 버튼) */
+    .card-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .mini-btn{
+      border:none;
+      cursor:pointer;
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:.85rem;
+      background:#111;
+      color:#fff;
+      white-space:nowrap;
+    }
+    .mini-btn:hover{ opacity:.92; }
+
+    /* 일정 탭: 활동 계획 리스트 */
+    .plan-list{
+      display:grid;
+      gap:10px;
+    }
+    .plan-item{
       background:#fff;
-      padding:12px 8px;
-      border-radius:12px;
-      text-align:center;
-      font-size:1.2rem;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;
+      padding:10px 12px;
+      line-height:1.35;
+    }
+    .plan-title{
+      font-weight:900;
+      margin-bottom:4px;
+    }
+    .plan-meta{
+      font-size:.86rem;
+      opacity:.88;
+    }
+
+    /* ===== 스쿨 탭 ===== */
+    .school-wrap{display:grid;gap:12px}
+
+    #schoolGrid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:10px;
+    }
+    .school-slot{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;
+      padding:10px;
+      box-sizing:border-box;
+      display:grid;
+      gap:8px;
+    }
+    .slot-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+    }
+    .slot-num{
+      font-weight:900;
+      font-size:.9rem;
+      opacity:.8;
+    }
+    .slot-toggle{
       cursor:pointer;
       user-select:none;
-      border:1px solid rgba(0,0,0,.06);
+      font-size:1.15rem;
+      padding:4px 8px;
+      border-radius:10px;
+      background:rgba(0,0,0,.05);
     }
-    .school-member:hover{ background: rgba(0,0,0,.03); }
+    .slot-toggle:hover{ background:rgba(0,0,0,.08); }
+    .slot-input{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid rgba(0,0,0,.12);
+      outline:none;
+      font-size:.92rem;
+    }
 
-    /* 스쿨 진행률 바(기존 스타일 유지) */
+    /* 스쿨 진행률 바 */
     .school-thermo{
       background:#eee;
       border-radius:14px;
@@ -219,20 +366,28 @@
 
     /* 공통 */
     const branches = ["달비","상인","원덕","대곡","월배","유천","진천","영남","옥포","화원"];
-    const todayKey = new Date().toISOString().slice(0,10);
+    const today = new Date();
+    const todayKey = today.toISOString().slice(0,10);
     const nicknameKey = "wolbaehwayang_nickname";
     let nickname = localStorage.getItem(nicknameKey) || "";
 
     /* 홈 온도계 설정 */
     const HOME_THERMO_CELLS = 300;   // 300칸
-    const HOME_CELL_UNIT_MIN = 10;   // 1칸 = 10분 (원하시면 1, 5, 20 등으로 변경)
+    const HOME_CELL_UNIT_MIN = 10;   // 1칸=10분(기본)
 
     /* 홈 3열 배치(요청하신 순서/구성 고정) */
     const HOME_COLUMNS = [
-      ["달비","상인","원덕"],
-      ["대곡","월배","유천","진천"],
-      ["영남","옥포","화원"]
+      { theme: "theme-blue",  branches: ["달비","상인","원덕"] },
+      { theme: "theme-yellow",branches: ["대곡","월배","유천","진천"] },
+      { theme: "theme-pink",  branches: ["영남","옥포","화원"] }
     ];
+
+    /* 일정(이달) */
+    const monthYear = today.getFullYear();
+    const monthIndex = today.getMonth(); // 0~11
+    const monthStart = new Date(monthYear, monthIndex, 1);
+    const monthEnd = new Date(monthYear, monthIndex + 1, 0);
+    const monthKeyPrefix = `${monthYear}-${String(monthIndex+1).padStart(2,"0")}-`; // YYYY-MM-
 
     /* DOM 헬퍼 */
     const $ = (id) => document.getElementById(id);
@@ -251,7 +406,7 @@
       });
     }
 
-    /* 탭 전환: 반드시 전역(window)에 노출 */
+    /* 탭 전환: 전역 */
     window.showTab = (id) => {
       document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
       const el = $(id);
@@ -314,10 +469,10 @@
 
       alert("활동 기록 완료 🔥");
       await refreshAll();
-      window.showTab("home");
+      window.showTab("schedule"); // UX: 활동 기록 후 일정으로 이동(계획 확인)
     };
 
-    /* 오늘 합계 + 상세 */
+    /* ===== 홈: 오늘 합계 + 상세 ===== */
     async function loadTodaySummary() {
       const chantSnap = await getDocs(query(collection(db, "chants"), where("dateKey", "==", todayKey)));
       const activitySnap = await getDocs(query(collection(db, "activities"), where("dateKey", "==", todayKey)));
@@ -341,81 +496,50 @@
       $("todayDetail").innerHTML = detail || "오늘 기록이 없습니다.";
     }
 
-    /* 일정 달력 (창제+활동 취합) */
-    async function loadCalendar() {
-      const map = {};
+    /* ===== 홈: 누적 지부별 온도계(300칸, 아래→위) ===== */
+    function gradientColor(theme, t) {
+      // t=0(아래/진) -> t=1(위/연)
+      // 테마별 색상 계열 지정
+      // Blue: 210~200, Yellow: 45~50, Pink: 330
+      let hue = 330;
+      if (theme === "theme-blue") hue = 210;
+      if (theme === "theme-yellow") hue = 48;
 
-      const chantSnap = await getDocs(collection(db, "chants"));
-      chantSnap.forEach(d => {
-        const { dateKey, minutes } = d.data();
-        if (!dateKey) return;
-        map[dateKey] = (map[dateKey] || 0) + (Number(minutes) || 0);
-      });
-
-      const actSnap = await getDocs(collection(db, "activities"));
-      actSnap.forEach(d => {
-        const { dateKey } = d.data();
-        if (!dateKey) return;
-        map[dateKey] = (map[dateKey] || 0) + 20;
-      });
-
-      const cal = $("calendar");
-      cal.innerHTML = "";
-      Object.keys(map).sort().forEach(k => {
-        const div = document.createElement("div");
-        div.className = "calendar-day";
-        div.innerHTML = `<strong>${k}</strong><br>${map[k]}분`;
-        cal.appendChild(div);
-      });
-    }
-
-    /* ===== 홈: 누적 지부별 온도계(300칸) ===== */
-
-    // 그라데이션 색상(아래가 진하고 위가 연해지도록): t=0(아래) -> t=1(위)
-    function gradientColor(t) {
-      // 핑크/마젠타 계열로 부드럽게 보이도록 HSL 사용
-      // hue=330 근처, 아래는 채도/명도 더 강하게
-      const hue = 330;
-      const sat = 90 - Math.round(t * 25);   // 90 -> 65
-      const light = 45 + Math.round(t * 30); // 45 -> 75
+      // 아래는 더 진하게: 채도 높고 명도 낮게
+      const sat = 92 - Math.round(t * 28);    // 92 -> 64
+      const light = 42 + Math.round(t * 34);  // 42 -> 76
       return `hsl(${hue} ${sat}% ${light}%)`;
     }
 
-    function buildThermoGridHTML(filledCells) {
-      // 20x15 = 300칸
-      const total = HOME_THERMO_CELLS;
-      const startFilledPos = total - filledCells + 1; // 이 position부터 채움(아래쪽부터)
+    function buildThermoGridHTML(filledCells, theme) {
+      const total = HOME_THERMO_CELLS; // 300
+      const startFilledPos = total - filledCells + 1;
 
-      let html = `<div class="thermo"><div class="thermo-grid">`;
+      let html = `<div class="thermo-grid">`;
       for (let pos = 1; pos <= total; pos++) {
         const isFilled = (filledCells > 0) && (pos >= startFilledPos);
         if (!isFilled) {
           html += `<div class="cell"></div>`;
         } else {
           // 아래쪽(진) -> 위쪽(연): pos가 클수록 아래쪽
-          // filled 영역 내에서 위쪽일수록 t가 커지도록 계산
-          const rankFromBottom = (total - pos);      // 아래쪽일수록 0에 가까움
+          const rankFromBottom = (total - pos); // 아래쪽일수록 0
           const t = Math.min(1, Math.max(0, rankFromBottom / (total - 1)));
-          const color = gradientColor(t);
+          const color = gradientColor(theme, t);
           html += `<div class="cell filled" style="background:${color};"></div>`;
         }
       }
-      html += `</div></div>`;
+      html += `</div>`;
       return html;
     }
 
     async function loadHomeThermometersCumulative() {
       const grid = $("homeThermoGrid");
       if (!grid) return;
-
-      // UX: 로딩 표시
       grid.innerHTML = `<div class="small">누적 온도계 집계 중...</div>`;
 
-      // 지부별 합계 0으로 초기화(기록 없는 지부도 반드시 표시)
       const sumByBranch = {};
       branches.forEach(b => sumByBranch[b] = 0);
 
-      // 성능: 컬렉션 각각 1회 조회 후 프런트에서 합산
       const [chantSnap, actSnap] = await Promise.all([
         getDocs(collection(db, "chants")),
         getDocs(collection(db, "activities"))
@@ -428,19 +552,17 @@
 
       actSnap.forEach(d => {
         const { branch } = d.data();
-        if (branch && sumByBranch[branch] != null) sumByBranch[branch] += 20; // 활동=20분
+        if (branch && sumByBranch[branch] != null) sumByBranch[branch] += 20;
       });
 
-      // 렌더링: 3열 고정 배치(요청하신 그룹 그대로)
       grid.innerHTML = "";
-      HOME_COLUMNS.forEach((colBranches) => {
+
+      HOME_COLUMNS.forEach((colDef) => {
         const col = document.createElement("div");
-        col.className = "home-col";
+        col.className = `home-col ${colDef.theme}`;
 
-        colBranches.forEach((branch) => {
+        colDef.branches.forEach((branch) => {
           const totalMin = sumByBranch[branch] || 0;
-
-          // 300칸으로 환산(아래→위 채움)
           const filledCells = Math.min(HOME_THERMO_CELLS, Math.floor(totalMin / HOME_CELL_UNIT_MIN));
           const capacityMin = HOME_THERMO_CELLS * HOME_CELL_UNIT_MIN;
 
@@ -457,8 +579,12 @@
                 기준: 1칸=${HOME_CELL_UNIT_MIN}분 (최대 ${capacityMin}분)
               </div>
             </div>
-            <div>
-              ${buildThermoGridHTML(filledCells)}
+
+            <div class="thermo-frame ${colDef.theme}">
+              <div class="tube">
+                ${buildThermoGridHTML(filledCells, colDef.theme)}
+              </div>
+              <div class="bulb"></div>
             </div>
           `;
           col.appendChild(card);
@@ -468,7 +594,164 @@
       });
     }
 
-    /* ===== 스쿨(선택 지부 진행률 + 20칸 토글) ===== */
+    /* ===== 일정 탭: 활동 계획 리스트(이달) + 이달 달력 ===== */
+
+    function isInThisMonth(dateKey) {
+      // YYYY-MM-DD
+      return typeof dateKey === "string" && dateKey.startsWith(monthKeyPrefix);
+    }
+
+    async function loadMonthPlans() {
+      const container = $("monthPlanList");
+      if (!container) return;
+      container.innerHTML = "불러오는 중...";
+
+      // 인덱스/정렬 요구를 피하기 위해 전체 조회 후 이달 필터(규모가 커지면 서버 집계 권장)
+      const actSnap = await getDocs(collection(db, "activities"));
+
+      const plans = [];
+      actSnap.forEach(d => {
+        const data = d.data();
+        if (isInThisMonth(data.dateKey)) plans.push(data);
+      });
+
+      // JS 정렬: dateKey 오름차순, createdAt 있으면 보조 정렬
+      plans.sort((a, b) => {
+        if ((a.dateKey || "") < (b.dateKey || "")) return -1;
+        if ((a.dateKey || "") > (b.dateKey || "")) return 1;
+        return 0;
+      });
+
+      if (plans.length === 0) {
+        container.innerHTML = `<div class="small">이달에 기록된 활동 계획이 없습니다.</div>`;
+        return;
+      }
+
+      container.innerHTML = "";
+      plans.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "plan-item";
+        div.innerHTML = `
+          <div class="plan-title">${p.dateKey || ""} · ${p.branch || ""}</div>
+          <div class="plan-meta">주체자: <strong>${p.subject || ""}</strong> → 대상자: <strong>${p.target || ""}</strong></div>
+          ${p.method ? `<div class="plan-meta">방법: ${p.method}</div>` : ``}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // 회합 일정 추가(달력 우측 상단 + 버튼)
+    window.addMeeting = async () => {
+      const defaultDate = todayKey;
+      const dateKey = prompt("회합 날짜를 입력하세요 (YYYY-MM-DD)", defaultDate);
+      if (!dateKey) return;
+
+      // 간단한 형식 체크
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+        alert("날짜 형식이 올바르지 않습니다. 예: 2026-01-16");
+        return;
+      }
+
+      const title = prompt("회합 제목/내용을 입력하세요", "회합");
+      if (!title) return;
+
+      await addDoc(collection(db, "meetings"), {
+        dateKey,
+        title: title.trim(),
+        createdAt: serverTimestamp()
+      });
+
+      alert("회합 일정이 추가되었습니다.");
+      await loadMonthCalendar(); // 달력 갱신
+    };
+
+    async function loadMonthCalendar() {
+      const cal = $("monthCalendar");
+      if (!cal) return;
+      cal.innerHTML = "불러오는 중...";
+
+      // 이달 데이터 맵 구성
+      const chantMap = {}; // dateKey -> minutes
+      const actMap = {};   // dateKey -> count
+      const meetingMap = {}; // dateKey -> [titles...]
+
+      // 규모가 커지면 where(dateKey startsWith) 같은 서버 전처리 필요.
+      // 현재는 전체 조회 후 이달 필터.
+      const [chantSnap, actSnap, meetSnap] = await Promise.all([
+        getDocs(collection(db, "chants")),
+        getDocs(collection(db, "activities")),
+        getDocs(collection(db, "meetings"))
+      ]);
+
+      chantSnap.forEach(d => {
+        const { dateKey, minutes } = d.data();
+        if (!isInThisMonth(dateKey)) return;
+        chantMap[dateKey] = (chantMap[dateKey] || 0) + (Number(minutes) || 0);
+      });
+
+      actSnap.forEach(d => {
+        const { dateKey } = d.data();
+        if (!isInThisMonth(dateKey)) return;
+        actMap[dateKey] = (actMap[dateKey] || 0) + 1;
+      });
+
+      meetSnap.forEach(d => {
+        const { dateKey, title } = d.data();
+        if (!isInThisMonth(dateKey)) return;
+        if (!meetingMap[dateKey]) meetingMap[dateKey] = [];
+        meetingMap[dateKey].push(title || "회합");
+      });
+
+      // 달력 렌더(요일 헤더 + 공백 + 날짜)
+      const weekdays = ["일","월","화","수","목","금","토"];
+      cal.innerHTML = "";
+
+      weekdays.forEach(w => {
+        const h = document.createElement("div");
+        h.className = "weekday";
+        h.textContent = w;
+        cal.appendChild(h);
+      });
+
+      const firstDayWeek = monthStart.getDay(); // 0=일
+      for (let i = 0; i < firstDayWeek; i++) {
+        const blank = document.createElement("div");
+        blank.className = "day-cell";
+        blank.style.visibility = "hidden";
+        cal.appendChild(blank);
+      }
+
+      const lastDate = monthEnd.getDate();
+      for (let day = 1; day <= lastDate; day++) {
+        const dateKey = `${monthYear}-${String(monthIndex+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+
+        const chantMin = chantMap[dateKey] || 0;
+        const actCount = actMap[dateKey] || 0;
+        const meetings = meetingMap[dateKey] || [];
+
+        const cell = document.createElement("div");
+        cell.className = "day-cell";
+        cell.innerHTML = `
+          <div class="day-num">${day}</div>
+          ${chantMin ? `<span class="badge">창제 ${chantMin}분</span>` : ``}
+          ${actCount ? `<span class="badge">활동 ${actCount}건</span>` : ``}
+          ${meetings.length ? meetings.slice(0,2).map(t=>`<span class="badge meet-badge">회합 ${escapeHtml(t)}</span>`).join("") : ``}
+          ${meetings.length > 2 ? `<div class="small" style="margin-top:4px;">외 ${meetings.length-2}건</div>` : ``}
+        `;
+        cal.appendChild(cell);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    /* ===== 스쿨 탭: 지부 선택 진행률 + 20칸(이름 입력 포함) ===== */
     async function loadThermometerForBranch(branch) {
       const wrap = $("schoolThermoWrap");
       wrap.innerHTML = "";
@@ -509,36 +792,86 @@
         if (typeof data.slot === "number") bySlot.set(data.slot, { ref: doc.ref, ...data });
       });
 
-      for (let i = 1; i <= 20; i++) {
-        const existing = bySlot.get(i) || null;
+      for (let slot = 1; slot <= 20; slot++) {
+        let existing = bySlot.get(slot) || null;
         const confirmed = existing?.confirmed === true;
+        const name = existing?.name || "";
 
-        const cell = document.createElement("div");
-        cell.className = "school-member";
-        cell.textContent = confirmed ? "✅" : "△";
+        const card = document.createElement("div");
+        card.className = "school-slot";
 
-        cell.onclick = async () => {
+        const top = document.createElement("div");
+        top.className = "slot-top";
+
+        const num = document.createElement("div");
+        num.className = "slot-num";
+        num.textContent = `${slot}번`;
+
+        const toggle = document.createElement("div");
+        toggle.className = "slot-toggle";
+        toggle.textContent = confirmed ? "✅" : "△";
+
+        const input = document.createElement("input");
+        input.className = "slot-input";
+        input.placeholder = "대상자 이름 입력";
+        input.value = name;
+
+        // 상태 토글(아이콘 클릭)
+        toggle.onclick = async () => {
           const newStatus = !(existing?.confirmed === true);
-          cell.textContent = newStatus ? "✅" : "△";
+          toggle.textContent = newStatus ? "✅" : "△";
 
+          // 문서가 없으면 생성(이름 포함)
           if (existing?.ref) {
-            await updateDoc(existing.ref, { confirmed: newStatus, updatedAt: serverTimestamp() });
+            await updateDoc(existing.ref, {
+              confirmed: newStatus,
+              updatedAt: serverTimestamp()
+            });
             existing.confirmed = newStatus;
           } else {
             const newRef = await addDoc(collection(db, "school"), {
               branch,
-              slot: i,
+              slot,
               confirmed: newStatus,
+              name: (input.value || "").trim(),
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp()
             });
-            bySlot.set(i, { ref: newRef, branch, slot: i, confirmed: newStatus });
+            existing = { ref: newRef, branch, slot, confirmed: newStatus, name: (input.value || "").trim() };
+            bySlot.set(slot, existing);
           }
 
           await loadThermometerForBranch(branch);
         };
 
-        grid.appendChild(cell);
+        // 이름 저장(blur 시 저장)
+        input.addEventListener("blur", async () => {
+          const newName = (input.value || "").trim();
+
+          if (existing?.ref) {
+            await updateDoc(existing.ref, { name: newName, updatedAt: serverTimestamp() });
+            existing.name = newName;
+          } else {
+            // 이름만 먼저 저장해도 문서를 만들어 둠(상태는 기본 △)
+            const newRef = await addDoc(collection(db, "school"), {
+              branch,
+              slot,
+              confirmed: false,
+              name: newName,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+            existing = { ref: newRef, branch, slot, confirmed: false, name: newName };
+            bySlot.set(slot, existing);
+          }
+        });
+
+        top.appendChild(num);
+        top.appendChild(toggle);
+
+        card.appendChild(top);
+        card.appendChild(input);
+        grid.appendChild(card);
       }
     }
 
@@ -564,11 +897,11 @@
       statsDiv.innerHTML = html;
     };
 
-    /* 관리자: 전체 리셋(주의: 보안 규칙/권한 필요) */
+    /* 관리자: 전체 리셋 */
     window.resetAllData = async () => {
-      if (!confirm("모든 기록(창제/활동/스쿨)을 삭제합니다. 진행할까요?")) return;
+      if (!confirm("모든 기록(창제/활동/스쿨/회합)을 삭제합니다. 진행할까요?")) return;
 
-      const cols = ["chants", "activities", "school"];
+      const cols = ["chants", "activities", "school", "meetings"];
       for (const col of cols) {
         const snap = await getDocs(collection(db, col));
         for (const d of snap.docs) {
@@ -583,9 +916,13 @@
 
     async function refreshAll() {
       await loadTodaySummary();
-      await loadCalendar();
-      await loadHomeThermometersCumulative(); // 홈 누적 온도계
+      await loadHomeThermometersCumulative();
 
+      // 일정 탭 데이터
+      await loadMonthPlans();
+      await loadMonthCalendar();
+
+      // 스쿨 탭
       const selected = $("schoolBranchSelect").value;
       await loadThermometerForBranch(selected);
       await loadSchoolGrid(selected);
@@ -606,9 +943,6 @@
 
       if (nickname) {
         await refreshAll();
-      } else {
-        // 닉네임 없는 상태에서도 홈 온도계는 표시할지 여부 선택 가능
-        // 원하시면 여기서도 loadHomeThermometersCumulative()를 호출해 항상 공개할 수 있습니다.
       }
 
       $("schoolBranchSelect").addEventListener("change", async (e) => {
@@ -639,13 +973,11 @@
     <div class="card"><strong>오늘 기록 상세</strong><br><div id="todayDetail"></div></div>
 
     <div class="card">
-      <strong>지부별 누적 온도계 (300칸, 아래→위 채움)</strong>
+      <strong>지부별 누적 온도계 (300칸 · 아래→위 · 3열 색상)</strong>
       <div class="small" style="margin-top:6px;">
-        창제(분) + 활동(20분 환산) 누적 합산. 1칸=10분(기본).
+        1열(파랑): 달비/상인/원덕 · 2열(노랑): 대곡/월배/유천/진천 · 3열(분홍): 영남/옥포/화원
       </div>
       <div style="height:12px;"></div>
-
-      <!-- 3열 고정 배치 -->
       <div id="homeThermoGrid" class="home-thermo-grid"></div>
     </div>
   </section>
@@ -679,28 +1011,44 @@
       <div style="height:10px;"></div>
       <input id="activityMethod" placeholder="활동 방법 (선택)" />
       <div style="height:12px;"></div>
-      <button class="btn" onclick="saveActivity()">활동 기록 🔥</button>
-      <div class="small" style="margin-top:8px;">활동 1회 = 20분 환산</div>
+      <button class="btn" onclick="saveActivity()">활동 계획 기록 🔥</button>
+      <div class="small" style="margin-top:8px;">활동 1회 = 20분 환산 · 기록 후 일정 탭에서 확인</div>
     </div>
   </section>
 
   <!-- SCHEDULE -->
   <section id="schedule">
-    <div class="card"><strong>오늘의 계획 / 일정</strong><br>• 창제 및 활동 기록</div>
+    <!-- 상단: 활동 계획 리스트 -->
     <div class="card">
-      <strong>전체 달력(창제+활동 환산)</strong>
-      <div style="height:10px;"></div>
-      <div id="calendar" class="calendar"></div>
+      <div class="card-header">
+        <div>
+          <strong>이달의 활동 계획 리스트</strong>
+          <div class="small">기록된 활동 계획을 날짜별로 확인합니다.</div>
+        </div>
+      </div>
+      <div id="monthPlanList" class="plan-list"></div>
+    </div>
+
+    <!-- 하단: 이달 달력 + 회합 추가 버튼 -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <strong>이달의 달력</strong>
+          <div class="small">창제(분) · 활동(건) · 회합(일정)</div>
+        </div>
+        <button class="mini-btn" onclick="addMeeting()">+ 회합</button>
+      </div>
+      <div id="monthCalendar" class="month-calendar"></div>
     </div>
   </section>
 
   <!-- SCHOOL -->
   <section id="school">
     <div class="card">
-      <strong>스쿨 (지부별 20칸 △/✅)</strong>
+      <strong>스쿨 (지부별 20칸 · △/✅ · 대상자 이름 입력)</strong>
       <div style="height:10px;"></div>
       <select id="schoolBranchSelect"></select>
-      <div class="small" style="margin-top:8px;">칸을 클릭하면 △/✅ 토글됩니다.</div>
+      <div class="small" style="margin-top:8px;">아이콘 클릭: △/✅ 토글 · 이름 입력 후 화면 밖 클릭(blur) 시 저장</div>
     </div>
 
     <div class="card school-wrap">
