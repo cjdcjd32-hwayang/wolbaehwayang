@@ -2,103 +2,18 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>월배권 보은의 여자부</title>
+  <title>🌸 월배권 보은의 여자부 🌸</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- 배경 & 기본 스타일 -->
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      background: url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee') center/cover no-repeat fixed;
-      color: #222;
-    }
-    header {
-      text-align: center;
-      padding: 20px;
-      background: rgba(255,255,255,0.8);
-    }
-    nav {
-      display: flex;
-      justify-content: space-around;
-      background: rgba(255,255,255,0.9);
-      position: sticky;
-      top: 0;
-    }
-    nav button {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      background: none;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    section {
-      display: none;
-      padding: 16px;
-      background: rgba(255,255,255,0.85);
-      margin: 12px;
-      border-radius: 12px;
-    }
-    section.active { display: block; }
-
-    /* 온도계 */
-    .thermometer {
-      width: 60px;
-      height: 260px;
-      border: 3px solid #555;
-      border-radius: 30px;
-      margin: 0 auto;
-      position: relative;
-      background: #fff;
-      overflow: hidden;
-    }
-    .thermo-fill {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 0%;
-      background: linear-gradient(to top, #1e90ff, #ffd700, #ff4500);
-      transition: height 0.5s;
-    }
-    .thermo-lines {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: repeating-linear-gradient(
-        to top,
-        transparent,
-        transparent 18px,
-        rgba(0,0,0,0.15) 19px
-      );
-      pointer-events: none;
-    }
-
-    .branch-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 16px;
-    }
-    .branch-card {
-      text-align: center;
-    }
-
-    /* 입력 */
-    input, select, button {
-      padding: 10px;
-      margin: 6px 0;
-      width: 100%;
-      font-size: 14px;
-    }
-    .admin { border: 2px dashed #c00; padding: 12px; }
-  </style>
-
-  <!-- Firebase -->
+  <!-- Firebase SDK (v9 modular) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import {
+      getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    const firebaseConfig = {
+    /* 🔥 Firebase 설정 */
+    const firebaseConfig = { 
       apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
       authDomain: "wolbaehwayang-d1787.firebaseapp.com",
       projectId: "wolbaehwayang-d1787"
@@ -107,109 +22,381 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    /* 탭 */
-    window.showTab = (id) => {
-      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    };
+    /* 🔐 관리자 설정 (클라이언트 보호용) */
+    const ADMIN_PASSWORD = "admin-1234";
 
-    /* 닉네임 */
-    window.saveNickname = async () => {
-      const nick = document.getElementById('nicknameInput').value.trim();
-      if (!nick) return alert('닉네임 입력');
-      localStorage.setItem('nickname', nick);
-      await setDoc(doc(db, 'users', nick), { nickname: nick, createdAt: serverTimestamp() }, { merge: true });
-      alert('입장 완료');
-    };
-
-    /* 창제 기록 (1일 3회 제한) */
-    window.saveChant = async () => {
-      const nick = localStorage.getItem('nickname');
-      if (!nick) return alert('닉네임 필요');
-      const branch = document.getElementById('branch').value;
-      const minutes = Number(document.getElementById('minutes').value);
-      const today = new Date().toISOString().slice(0,10);
-
-      const q = query(collection(db, 'chants'), where('nickname','==',nick), where('date','==',today));
-      const snap = await getDocs(q);
-      if (snap.size >= 3) return alert('하루 3회 제한');
-
-      await addDoc(collection(db,'chants'),{
-        nickname:nick,
-        branch,
-        minutes,
-        blocks: minutes===10?1:2,
-        date: today,
-        createdAt: serverTimestamp()
-      });
-      alert('저장 완료');
-    };
-
-    /* 관리자 월별 리셋 (표시용) */
-    window.adminReset = () => {
-      const code = prompt('RESET 입력');
-      if (code==='RESET') alert('관리자 리셋 실행 (Firestore에서 월별 문서 삭제)');
-    };
-
+    window.db = db;
+    window.ADMIN_PASSWORD = ADMIN_PASSWORD;
+    window.serverTimestamp = serverTimestamp;
   </script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: url("https://images.unsplash.com/photo-1505483531331-8325e0ed3f6e") center / cover no-repeat fixed;
+      color: #222;
+    }
+    header {
+      text-align: center;
+      padding: 16px;
+      font-size: 22px;
+      font-weight: bold;
+      background: rgba(255,255,255,0.85);
+    }
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(255,255,255,0.9);
+      padding: 8px 0;
+      flex-wrap: wrap;
+    }
+    nav button {
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 4px;
+    }
+    section {
+      display: none;
+      padding: 16px;
+      background: rgba(255,255,255,0.88);
+      min-height: 70vh;
+    }
+    section.active { display: block; }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    /* 🌡 온도계 */
+    .thermo-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 12px;
+      text-align: center;
+    }
+    .thermometer {
+      width: 40px;
+      height: 180px;
+      border: 3px solid #aaa;
+      border-radius: 20px;
+      margin: 8px auto;
+      display: flex;
+      flex-direction: column-reverse;
+      overflow: hidden;
+      background: #f5f5f5;
+    }
+    .thermo-fill {
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, #ff4d4d, #ffd966, #66ccff);
+      transition: height 0.6s;
+    }
+
+    /* 📅 달력 */
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .day {
+      background: #f2f2f2;
+      border-radius: 6px;
+      padding: 6px;
+    }
+    .day strong { display:block; }
+
+    input, select, button {
+      padding: 8px;
+      margin-top: 6px;
+      width: 100%;
+    }
+
+    .rank { font-size: 14px; margin: 4px 0; }
+    .hidden { display:none; }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <h1>🌸 월배권 보은의 여자부</h1>
-</header>
+<header>🌸 월배권 보은의 여자부 🌸</header>
 
 <nav>
-  <button onclick="showTab('home')">홈</button>
+  <button onclick="showTab('home')">🌸 홈</button>
   <button onclick="showTab('chant')">🌱 창제</button>
-  <button onclick="showTab('activity')">활동</button>
-  <button onclick="showTab('schedule')">일정</button>
-  <button onclick="showTab('school')">스쿨</button>
-  <button onclick="showTab('admin')">관리자</button>
+  <button onclick="showTab('activity')">🔥 활동</button>
+  <button onclick="showTab('schedule')">📅 일정</button>
+  <button onclick="showTab('school')">🎓 스쿨</button>
+  <button onclick="showTab('admin')">🔐 관리자</button>
 </nav>
 
+<!-- 🌸 HOME -->
 <section id="home" class="active">
-  <h2>지부별 온도계</h2>
-  <div class="branch-grid">
-    <div class="branch-card">
-      <p>달비</p>
-      <div class="thermometer"><div class="thermo-fill" style="height:40%"></div><div class="thermo-lines"></div></div>
+  <div class="card">
+    <h3>🌸 지부별 온도계</h3>
+    <div class="thermo-wrap" id="branchThermos"></div>
+  </div>
+
+  <div class="card">
+    <h3>🏆 전체 랭킹 (상위 5)</h3>
+    <div id="ranking"></div>
+  </div>
+</section>
+
+<!-- 🌱 CHANT -->
+<section id="chant">
+  <div class="card">
+    <h3>🌱 창제 기록</h3>
+    <div id="nicknameBox">
+      <input id="nicknameInput" placeholder="닉네임" />
+      <button onclick="saveNickname()">닉네임 저장</button>
     </div>
-    <div class="branch-card">
-      <p>상인</p>
-      <div class="thermometer"><div class="thermo-fill" style="height:65%"></div><div class="thermo-lines"></div></div>
+    <p id="savedNickname" class="hidden"></p>
+
+    <select id="branchSelect">
+      <option value="">지부 선택</option>
+      <option>달비</option><option>상인</option><option>원덕</option>
+      <option>대곡</option><option>월배</option><option>유천</option>
+      <option>진천</option><option>영남</option><option>옥포</option><option>화원</option>
+    </select>
+    <select id="timeSelect">
+      <option value="">시간 선택</option>
+      <option value="10">10분</option>
+      <option value="30">30분</option>
+      <option value="60">60분</option>
+    </select>
+    <button onclick="saveChant()">저장</button>
+    <p id="chantMsg"></p>
+  </div>
+</section>
+
+<!-- 🔥 ACTIVITY -->
+<section id="activity">
+  <div class="card">
+    <h3>🔥 활동 기록</h3>
+    <input id="activityTitle" placeholder="활동 내용" />
+    <select id="activityBranch">
+      <option value="">지부 선택</option>
+      <option>달비</option><option>상인</option><option>원덕</option>
+      <option>대곡</option><option>월배</option><option>유천</option>
+      <option>진천</option><option>영남</option><option>옥포</option><option>화원</option>
+    </select>
+    <button onclick="saveActivity()">활동 저장</button>
+    <p id="activityMsg"></p>
+  </div>
+</section>
+
+<!-- 📅 SCHEDULE -->
+<section id="schedule">
+  <div class="card">
+    <h3>📅 이번 달 창제 달력</h3>
+    <div class="calendar" id="calendar"></div>
+  </div>
+</section>
+
+<!-- 🎓 SCHOOL -->
+<section id="school">
+  <div class="card">
+    <h3>🎓 스쿨 명단 (지부별 20명)</h3>
+    <p>※ △ 도전중 / ✅ 확답</p>
+    <p>※ 관리자 없이 누구나 수정 가능</p>
+  </div>
+</section>
+
+<!-- 🔐 ADMIN -->
+<section id="admin">
+  <div class="card">
+    <h3>🔐 관리자 패널</h3>
+    <input id="adminPw" type="password" placeholder="관리자 비밀번호" />
+    <button onclick="adminLogin()">로그인</button>
+
+    <div id="adminControls" class="hidden">
+      <hr/>
+      <p>⚠ 월별 초기화 (실제 삭제 없음, isArchived 처리)</p>
+      <label><input type="checkbox" id="confirmCheck" /> 이해했습니다</label>
+      <input id="confirmText" placeholder="초기화합니다 입력" />
+      <button onclick="monthlyReset()">월별 초기화</button>
     </div>
   </div>
 </section>
 
-<section id="chant">
-  <h2>🌱 창제 기록</h2>
-  <input id="nicknameInput" placeholder="닉네임" />
-  <button onclick="saveNickname()">닉네임 저장</button>
-  <select id="branch"><option>달비</option><option>상인</option></select>
-  <select id="minutes"><option value="10">10분</option><option value="30">30분</option></select>
-  <button onclick="saveChant()">기록 저장</button>
-</section>
+<script type="module">
+  import { collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-<section id="activity">
-  <h2>활동 기록</h2>
-  <p>닉네임 + 대상자 입력 방식 (구현 확장 가능)</p>
-</section>
+  const db = window.db;
+  const branches = ["달비","상인","원덕","대곡","월배","유천","진천","영남","옥포","화원"];
 
-<section id="schedule">
-  <h2>이달의 일정</h2>
-  <p>전체 사용자 창제 합산 달력 영역</p>
-</section>
+  window.showTab = (id) => {
+    document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  };
 
-<section id="school">
-  <h2>스쿨</h2>
-  <p>교육 / 공지 탭</p>
-</section>
+  // 🔑 닉네임
+  window.saveNickname = () => {
+    const nick = document.getElementById("nicknameInput").value.trim();
+    if (!nick) return alert("닉네임을 입력하세요");
+    localStorage.setItem("nickname", nick);
+    applyNicknameUI();
+  };
 
-<section id="admin" class="admin">
-  <h2>관리자 패널</h2>
-  <button onclick="adminReset()">월별 리셋</button>
-</section>
+  function applyNicknameUI() {
+    const nick = localStorage.getItem("nickname");
+    if (nick) {
+      document.getElementById("nicknameBox").classList.add("hidden");
+      const p = document.getElementById("savedNickname");
+      p.innerText = `현재 닉네임: ${nick}`;
+      p.classList.remove("hidden");
+    }
+  }
+
+  // 🌱 창제 (1일 3회 제한)
+  window.saveChant = async () => {
+    const nickname = localStorage.getItem("nickname");
+    const branch = document.getElementById("branchSelect").value;
+    const minutes = Number(document.getElementById("timeSelect").value);
+    const msg = document.getElementById("chantMsg");
+
+    if (!nickname || !branch || !minutes) {
+      msg.innerText = "모든 항목을 입력하세요";
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0,10);
+    const q = query(collection(db, "chants"), where("nickname","==",nickname), where("dateKey","==",today));
+    const snap = await getDocs(q);
+    if (snap.size >= 3) {
+      msg.innerText = "하루 최대 3회까지만 기록 가능합니다";
+      return;
+    }
+
+    await addDoc(collection(db, "chants"), {
+      nickname, branch, minutes,
+      blocks: minutes / 10,
+      dateKey: today,
+      createdAt: serverTimestamp(),
+      isArchived: false
+    });
+
+    msg.innerText = "저장 완료 🌱";
+    loadHome();
+    loadCalendar();
+  };
+
+  // 🔥 활동 (1회 = 2칸)
+  window.saveActivity = async () => {
+    const nickname = localStorage.getItem("nickname");
+    const branch = document.getElementById("activityBranch").value;
+    const title = document.getElementById("activityTitle").value.trim();
+    const msg = document.getElementById("activityMsg");
+
+    if (!nickname || !branch || !title) {
+      msg.innerText = "모든 항목을 입력하세요";
+      return;
+    }
+
+    await addDoc(collection(db, "activities"), {
+      nickname, branch, title,
+      blocks: 2,
+      createdAt: serverTimestamp(),
+      isArchived: false
+    });
+
+    msg.innerText = "활동 저장 완료 🔥";
+    loadHome();
+  };
+
+  // 🔐 관리자
+  window.adminLogin = () => {
+    const pw = document.getElementById("adminPw").value;
+    if (pw === window.ADMIN_PASSWORD) {
+      document.getElementById("adminControls").classList.remove("hidden");
+      alert("관리자 로그인 성공");
+    } else alert("비밀번호 오류");
+  };
+
+  window.monthlyReset = () => {
+    if (!document.getElementById("confirmCheck").checked) return;
+    if (document.getElementById("confirmText").value !== "초기화합니다") return;
+    alert("※ 실제 운영 시 Cloud Function으로 isArchived 처리 권장");
+  };
+
+  async function loadHome() {
+    const thermoWrap = document.getElementById("branchThermos");
+    const rankingBox = document.getElementById("ranking");
+    thermoWrap.innerHTML = "";
+    rankingBox.innerHTML = "";
+
+    const chantSnap = await getDocs(query(collection(db, "chants"), where("isArchived","==",false)));
+    const actSnap = await getDocs(query(collection(db, "activities"), where("isArchived","==",false)));
+
+    const branchSum = {};
+    const userSum = {};
+
+    chantSnap.forEach(d => {
+      const { branch, blocks, nickname } = d.data();
+      branchSum[branch] = (branchSum[branch] || 0) + blocks;
+      userSum[nickname] = (userSum[nickname] || 0) + blocks;
+    });
+
+    actSnap.forEach(d => {
+      const { branch, blocks, nickname } = d.data();
+      branchSum[branch] = (branchSum[branch] || 0) + blocks;
+      userSum[nickname] = (userSum[nickname] || 0) + blocks;
+    });
+
+    branches.forEach(b => {
+      const blocks = branchSum[b] || 0;
+      const percent = Math.min((blocks / 300) * 100, 100);
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <div>${b}</div>
+        <div class="thermometer"><div class="thermo-fill" style="height:${percent}%"></div></div>
+        <small>${blocks * 10}분</small>
+      `;
+      thermoWrap.appendChild(div);
+    });
+
+    Object.entries(userSum)
+      .sort((a,b)=>b[1]-a[1])
+      .slice(0,5)
+      .forEach(([name,blocks],i)=>{
+        const p = document.createElement("div");
+        p.className = "rank";
+        p.innerText = `${i+1}. ${name} - ${blocks*10}분`;
+        rankingBox.appendChild(p);
+      });
+  }
+
+  async function loadCalendar() {
+    const cal = document.getElementById("calendar");
+    cal.innerHTML = "";
+    const snap = await getDocs(query(collection(db, "chants"), where("isArchived","==",false)));
+    const map = {};
+
+    snap.forEach(d => {
+      const { dateKey, minutes } = d.data();
+      map[dateKey] = (map[dateKey] || 0) + minutes;
+    });
+
+    Object.keys(map).forEach(date => {
+      const div = document.createElement("div");
+      div.className = "day";
+      div.innerHTML = `<strong>${date.slice(-2)}</strong>${map[date]}분`;
+      cal.appendChild(div);
+    });
+  }
+
+  applyNicknameUI();
+  loadHome();
+  loadCalendar();
+</script>
 
 </body>
 </html>
