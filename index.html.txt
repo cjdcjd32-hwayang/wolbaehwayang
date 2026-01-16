@@ -50,15 +50,12 @@ if (savedNickname) {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔽 여기!
 const savedNickname = localStorage.getItem("wolbaehwayang_nickname");
 if (savedNickname) {
   document.getElementById("nicknameBox").style.display = "none";
 }
 
 localStorage.setItem("wolbaehwayang_nickname", nickname);
-
-// 🔽 이 줄 추가
 document.getElementById("nicknameBox").style.display = "none";
 
 
@@ -108,8 +105,81 @@ document.getElementById("nicknameBox").style.display = "none";
   });
 </script>
 
+<hr>
+
+<h2>🌱 창제 기록</h2>
+
+<select id="branchSelect">
+  <option value="">소속 지부 선택</option>
+  <option value="달비">달비</option>
+  <option value="상인">상인</option>
+  <option value="원덕">원덕</option>
+  <option value="대곡">대곡</option>
+  <option value="월배">월배</option>
+  <option value="유천">유천</option>
+  <option value="진천">진천</option>
+  <option value="영남">영남</option>
+  <option value="옥포">옥포</option>
+  <option value="화원">화원</option>
+</select>
+
+<select id="timeSelect">
+  <option value="">창제 시간 선택</option>
+  <option value="10">10분</option>
+  <option value="30">30분</option>
+  <option value="60">1시간</option>
+</select>
+
+<button id="saveChantBtn">창제 기록 저장</button>
+
+<p id="chantMsg"></p>
+
+
+import { collection, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const chantBtn = document.getElementById("saveChantBtn");
+const chantMsg = document.getElementById("chantMsg");
+
+chantBtn.addEventListener("click", async () => {
+  const nickname = localStorage.getItem("wolbaehwayang_nickname");
+  const branch = document.getElementById("branchSelect").value;
+  const minutes = document.getElementById("timeSelect").value;
+
+  if (!nickname) {
+    chantMsg.innerText = "닉네임 정보가 없습니다. 새로고침 후 다시 입력해주세요.";
+    chantMsg.style.color = "red";
+    return;
+  }
+
+  if (!branch || !minutes) {
+    chantMsg.innerText = "지부와 시간을 선택해주세요.";
+    chantMsg.style.color = "red";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "chants"), {
+      nickname: nickname,
+      branch: branch,
+      minutes: Number(minutes),
+      blocks: Number(minutes) / 10, // 🔥 온도계 칸
+      createdAt: new Date()
+    });
+
+    chantMsg.innerText = "창제 기록이 저장되었습니다 🌱";
+    chantMsg.style.color = "green";
+
+  } catch (e) {
+    chantMsg.innerText = "저장 실패. 다시 시도해주세요.";
+    chantMsg.style.color = "red";
+    console.error(e);
+  }
+});
+
+
 
 </html>
+
 
 
 
