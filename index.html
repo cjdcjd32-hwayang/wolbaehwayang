@@ -1108,8 +1108,7 @@
 
       actSnap.forEach(d=>{
         const x = d.data();
-        const dk = x.pl
-annedDateKey || x.dateKey;
+        const dk = x.plannedDateKey || x.dateKey;
         if (!dk || !isInThisMonth(dk)) return;
         // 달력/온도계 반영은 완료만, 하지만 상세보기에는 계획/완료 둘 다 보여주기 위해 모두 캐시
         (activitiesByDate[dk] ||= []).push(x);
@@ -2102,3 +2101,4 @@ annedDateKey || x.dateKey;
   </script>
 </body>
 </html>
+
