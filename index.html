@@ -1,126 +1,251 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>🌸 월배권 보은의 여자부 🌸</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8" />
+<title>🌸 월배권 보은의 여자부 🌸</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Firebase SDK (v9) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    /* Firebase 설정 */
-    const firebaseConfig = {
-      apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
-      authDomain: "wolbaehwayang-d1787.firebaseapp.com",
-      projectId: "wolbaehwayang-d1787"
-    };
+/* Firebase 설정 */
+const firebaseConfig = {
+  apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
+  authDomain: "wolbaehwayang-d1787.firebaseapp.com",
+  projectId: "wolbaehwayang-d1787"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    /* 공통 */
-    const branches = ["달비","상인","원덕","대곡","월배","유천","진천","영남","옥포","화원"];
-    const todayKey = new Date().toISOString().slice(0,10);
-    const nickname = localStorage.getItem("wolbaehwayang_nickname");
+/* 공통 변수 */
+const branches = ["달비","상인","원덕","대곡","월배","유천","진천","영남","옥포","화원"];
+const todayKey = new Date().toISOString().slice(0,10);
+let nickname = localStorage.getItem("wolbaehwayang_nickname");
 
-    window.onload = () => {
-      if (!nickname) document.getElementById("nicknameLayer").style.display = "flex";
-      else {
-        document.getElementById("currentNickname").innerText = nickname;
-        loadTodaySummary();
-        loadCalendar();
+/* 초기화 */
+window.onload = () => {
+  if(!nickname) document.getElementById("nicknameLayer").style.display="flex";
+  else {
+    document.getElementById("currentNickname").innerText = nickname;
+    loadTodaySummary();
+    loadCalendar();
+    loadThermometers(); // 초기 전체 온도계
+  }
+};
+
+/* 닉네임 저장 */
+window.saveNickname = () => {
+  const n = document.getElementById("nicknameInput").value.trim();
+  if(!n) return alert("닉네임을 입력하세요");
+  localStorage.setItem("wolbaehwayang_nickname", n);
+  location.reload();
+};
+
+/* 창제 기록 (1일 3회 제한) */
+window.saveChant = async () => {
+  const minutes = Number(document.getElementById("chantMinutes").value);
+  const branch = document.getElementById("chantBranch").value;
+  if(!minutes || !branch) return alert("지부/시간 선택");
+
+  const q = query(collection(db,"chants"), where("nickname","==",nickname), where("dateKey","==",todayKey));
+  const snap = await getDocs(q);
+  if(snap.size >= 3) return alert("하루 3회 제한");
+
+  await addDoc(collection(db,"chants"), {
+    nickname, branch, minutes,
+    blocks: minutes/10,
+    dateKey: todayKey,
+    createdAt: serverTimestamp(),
+    isArchived:false
+  });
+  alert("창제 기록 완료 🌱");
+  loadTodaySummary();
+  loadCalendar();
+};
+
+/* 활동 기록 (1회 = 20분) */
+window.saveActivity = async () => {
+  const branch = document.getElementById("activityBranch").value;
+  const subject = document.getElementById("activitySubject").value.trim();
+  const target = document.getElementById("activityTarget").value.trim();
+  const method = document.getElementById("activityMethod").value.trim();
+  if(!branch || !subject || !target) return alert("필수 항목 입력");
+
+  await addDoc(collection(db,"activities"),{
+    branch, subject, target, method,
+    blocks: 2,
+    dateKey: todayKey,
+    createdAt: serverTimestamp()
+  });
+  alert("활동 기록 완료 🔥");
+  loadCalendar();
+  loadTodaySummary();
+};
+
+/* 오늘 합계 및 상세 */
+async function loadTodaySummary(){
+  const chantSnap = await getDocs(query(collection(db,"chants"), where("dateKey","==",todayKey)));
+  const activitySnap = await getDocs(query(collection(db,"activities"), where("dateKey","==",todayKey)));
+
+  let total=0;
+  let detail="";
+
+  chantSnap.forEach(d=>{
+    const {nickname, branch, minutes} = d.data();
+    total += minutes;
+    detail += `🌱 ${branch} - ${minutes}분 (${nickname})<br>`;
+  });
+
+  activitySnap.forEach(d=>{
+    const {branch, subject, target} = d.data();
+    total += 20;
+    detail += `🔥 ${branch} - ${subject}→${target} (20분)<br>`;
+  });
+
+  document.getElementById("todayTotal").innerHTML = total+"분";
+  document.getElementById("todayDetail").innerHTML = detail || "오늘 기록이 없습니다.";
+}
+
+/* 일정 달력 */
+async function loadCalendar(){
+  const map={};
+  const chantSnap = await getDocs(collection(db,"chants"));
+  chantSnap.forEach(d=>{ const {dateKey, minutes}=d.data(); map[dateKey]=(map[dateKey]||0)+minutes; });
+
+  const actSnap = await getDocs(collection(db,"activities"));
+  actSnap.forEach(d=>{ const {dateKey}=d.data(); map[dateKey]=(map[dateKey]||0)+20; });
+
+  const cal=document.getElementById("calendar"); cal.innerHTML="";
+  Object.keys(map).sort().forEach(k=>{
+    const div=document.createElement("div");
+    div.className="calendar-day";
+    div.innerHTML=`<strong>${k}</strong><br>${map[k]}분`;
+    cal.appendChild(div);
+  });
+}
+
+/* 스쿨: 온도계 시각화 */
+async function loadThermometers(selectedBranch){
+  const container = document.getElementById("schoolThermometers");
+  container.innerHTML = "";
+  if(!selectedBranch) return;
+
+  const snap = await getDocs(query(collection(db,"school"), where("branch","==",selectedBranch)));
+  const total = snap.size;
+  const confirmed = snap.docs.filter(d=>d.data().confirmed).length;
+  const percent = Math.min(100, Math.round((confirmed/20)*100));
+
+  const div = document.createElement("div");
+  div.className = "thermometer";
+  div.innerHTML = `<strong>${selectedBranch}</strong>
+                   <div class="thermometer-bar" style="width:${percent}%"></div>
+                   ${confirmed}/20`;
+  container.appendChild(div);
+}
+
+/* 스쿨: 20칸 △/✅ 클릭 */
+async function loadSchoolGrid(selectedBranch){
+  const container = document.getElementById("schoolGrid");
+  container.innerHTML = "";
+  if(!selectedBranch) return;
+
+  const snap = await getDocs(query(collection(db,"school"), where("branch","==",selectedBranch)));
+  const members = Array(20).fill({confirmed:false});
+  snap.forEach((d,i)=>members[i]=d.data());
+
+  members.forEach((m,idx)=>{
+    const div = document.createElement("div");
+    div.className="school-member";
+    div.innerText = m.confirmed?"✅":"△";
+    div.style.cursor="pointer";
+
+    div.onclick = async ()=>{
+      const newStatus = !m.confirmed;
+      div.innerText = newStatus?"✅":"△";
+      if(snap.docs[idx]){
+        const docRef = snap.docs[idx].ref;
+        await updateDoc(docRef, { confirmed:newStatus });
+      } else {
+        await addDoc(collection(db,"school"), { branch:selectedBranch, confirmed:newStatus });
       }
+      loadThermometers(selectedBranch);
     };
+    container.appendChild(div);
+  });
+}
 
-    window.saveNickname = () => {
-      const n = document.getElementById("nicknameInput").value.trim();
-      if (!n) return alert("닉네임을 입력하세요");
-      localStorage.setItem("wolbaehwayang_nickname", n);
-      location.reload();
-    };
+/* 관리자: 리셋/통계 */
+async function resetAllData(){
+  if(!confirm("모든 기록을 삭제하시겠습니까?")) return;
+  const collections=["chants","activities","school"];
+  for(const col of collections){
+    const snap = await getDocs(collection(db,col));
+    snap.forEach(async d=> await deleteDoc(d.ref));
+  }
+  alert("전체 데이터 초기화 완료");
+  loadCalendar();
+  loadThermometers();
+}
 
-    /* 창제 기록 (1일 3회 제한) */
-    window.saveChant = async () => {
-      const minutes = Number(document.getElementById("chantMinutes").value);
-      const branch = document.getElementById("chantBranch").value;
-      if (!minutes || !branch) return alert("지부/시간 선택");
+async function loadAdminStats(){
+  const statsDiv = document.getElementById("adminStats");
+  let html="";
+  for(const branch of branches){
+    const chantSnap = await getDocs(query(collection(db,"chants"), where("branch","==",branch)));
+    const activitySnap = await getDocs(query(collection(db,"activities"), where("branch","==",branch)));
+    html += `<div>${branch}: 창제 ${chantSnap.size}회, 활동 ${activitySnap.size}회</div>`;
+  }
+  statsDiv.innerHTML=html;
+}
 
-      const q = query(collection(db,"chants"), where("nickname","==",nickname), where("dateKey","==",todayKey));
-      const snap = await getDocs(q);
-      if (snap.size >= 3) return alert("하루 3회 제한");
+/* 탭 전환 */
+function showTab(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
-      await addDoc(collection(db,"chants"),{
-        nickname, branch, minutes,
-        blocks: minutes/10,
-        dateKey: todayKey,
-        createdAt: serverTimestamp(),
-        isArchived:false
-      });
-      alert("창제 기록 완료 🌱");
-      loadTodaySummary(); loadCalendar();
-    };
-
-    /* 🔥 활동 기록 (1회 = 2칸) */
-    window.saveActivity = async () => {
-      const branch = document.getElementById("activityBranch").value;
-      const subject = document.getElementById("activitySubject").value.trim();
-      const target = document.getElementById("activityTarget").value.trim();
-      const method = document.getElementById("activityMethod").value.trim();
-      if (!branch || !subject || !target) return alert("필수 항목 입력");
-
-      await addDoc(collection(db,"activities"),{
-        branch, subject, target, method,
-        blocks: 2,
-        dateKey: todayKey,
-        createdAt: serverTimestamp()
-      });
-      alert("활동 기록 완료 🔥");
-      loadCalendar();
-    };
-
-    /* 오늘 합계 */
-    async function loadTodaySummary(){
-      const snap = await getDocs(query(collection(db,"chants"), where("dateKey","==",todayKey)));
-      let total=0; snap.forEach(d=>total+=d.data().minutes);
-      document.getElementById("todayTotal").innerText = total+"분";
+/* 스쿨 지부 선택 이벤트 */
+document.addEventListener("DOMContentLoaded", ()=>{
+  const schoolSelect = document.getElementById("schoolBranchSelect");
+  schoolSelect.onchange = ()=>{
+    const branch = schoolSelect.value;
+    if(branch){
+      loadSchoolGrid(branch);
+      loadThermometers(branch);
+    } else {
+      document.getElementById("schoolGrid").innerHTML="";
+      document.getElementById("schoolThermometers").innerHTML="";
     }
+  };
+});
+</script>
 
-    /* 일정 달력 (창제+활동 취합) */
-    async function loadCalendar(){
-      const map={};
-      const chantSnap = await getDocs(collection(db,"chants"));
-      chantSnap.forEach(d=>{ const {dateKey,minutes}=d.data(); map[dateKey]=(map[dateKey]||0)+minutes; });
+<style>
+body{margin:0;font-family:Apple SD Gothic Neo, sans-serif;
+  background:url('https://images.unsplash.com/photo-1522383225653-ed111181a951') center/cover fixed no-repeat;}
+header{background:rgba(255,255,255,.85);padding:16px;text-align:center;font-size:1.4rem;font-weight:bold}
+nav{display:flex;justify-content:space-around;background:rgba(255,255,255,.9);padding:10px}
+nav button{border:none;background:none;font-size:1rem;cursor:pointer}
+section{display:none;padding:20px} section.active{display:block}
+.card{background:rgba(255,255,255,.9);border-radius:16px;padding:16px;margin-bottom:16px}
+#nicknameLayer{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.calendar-day{background:#fff;border-radius:8px;padding:6px;font-size:.75rem;text-align:center}
 
-      const actSnap = await getDocs(collection(db,"activities"));
-      actSnap.forEach(d=>{ const {dateKey}=d.data(); map[dateKey]=(map[dateKey]||0)+20; }); // 활동=20분 환산
-
-      const cal=document.getElementById("calendar"); cal.innerHTML="";
-      Object.keys(map).sort().forEach(k=>{
-        const div=document.createElement("div");
-        div.className="calendar-day";
-        div.innerHTML=`<strong>${k}</strong><br>${map[k]}분`;
-        cal.appendChild(div);
-      });
-    }
-  </script>
-
-  <style>
-    body{margin:0;font-family:Apple SD Gothic Neo, sans-serif;
-      background:url('https://images.unsplash.com/photo-1522383225653-ed111181a951') center/cover fixed no-repeat;}
-    header{background:rgba(255,255,255,.85);padding:16px;text-align:center;font-size:1.4rem;font-weight:bold}
-    nav{display:flex;justify-content:space-around;background:rgba(255,255,255,.9);padding:10px}
-    nav button{border:none;background:none;font-size:1rem;cursor:pointer}
-    section{display:none;padding:20px} section.active{display:block}
-    .card{background:rgba(255,255,255,.9);border-radius:16px;padding:16px;margin-bottom:16px}
-    #nicknameLayer{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
-    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-    .calendar-day{background:#fff;border-radius:8px;padding:6px;font-size:.75rem;text-align:center}
-  </style>
+/* 스쿨 */
+.school-thermometers{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.thermometer{background:#eee;border-radius:12px;padding:6px;text-align:center;}
+.thermometer-bar{width:100%;height:20px;border-radius:12px;background:linear-gradient(to right,#4caf50,#c8e6c9);transition:width 0.5s;}
+#schoolGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.school-member{background:#fff;padding:10px;border-radius:8px;text-align:center;font-size:1.2rem;cursor:pointer;}
+</style>
 </head>
+
 <body>
 <header>🌸 월배권 보은의 여자부 🌸</header>
 <nav>
@@ -129,13 +254,17 @@
   <button onclick="showTab('activity')">🔥 활동</button>
   <button onclick="showTab('schedule')">📅 일정</button>
   <button onclick="showTab('school')">🎓 스쿨</button>
+  <button onclick="showTab('admin')">🔐 관리자</button>
 </nav>
 
+<!-- HOME -->
 <section id="home" class="active">
   <div class="card">현재 닉네임: <strong id="currentNickname"></strong></div>
   <div class="card">오늘 전체 창제 합계: <strong id="todayTotal">0분</strong></div>
+  <div class="card"><strong>오늘 기록 상세</strong><br><div id="todayDetail"></div></div>
 </section>
 
+<!-- CHANT -->
 <section id="chant">
   <div class="card">
     <select id="chantBranch"><option value="">지부</option><script>branches.forEach(b=>document.write(`<option>${b}</option>`))</script></select>
@@ -144,6 +273,7 @@
   </div>
 </section>
 
+<!-- ACTIVITY -->
 <section id="activity">
   <div class="card">
     <select id="activityBranch"><option value="">지부</option><script>branches.forEach(b=>document.write(`<option>${b}</option>`))</script></select><br><br>
@@ -154,19 +284,41 @@
   </div>
 </section>
 
+<!-- SCHEDULE -->
 <section id="schedule">
   <div class="card"><strong>오늘의 계획 / 일정</strong><br>• 창제 및 활동 기록</div>
   <div class="card"><strong>이달의 전체 달력</strong><div id="calendar" class="calendar"></div></div>
 </section>
 
+<!-- SCHOOL -->
 <section id="school">
-  <div class="card"><strong>스쿨 (지부별 20명 구조)</strong><br>△ 도전중 / ✅ 확답</div>
+  <div class="card">
+    <strong>스쿨 진행률 (지부 선택)</strong><br>
+    <select id="schoolBranchSelect">
+      <option value="">지부 선택</option>
+      <script>branches.forEach(b=>document.write(`<option value="${b}">${b}</option>`))</script>
+    </select>
+  </div>
+  <div class="card"><div id="schoolThermometers" class="school-thermometers"></div></div>
+  <div class="card"><div id="schoolGrid"></div></div>
 </section>
 
-<div id="nicknameLayer"><div class="card"><h3>닉네임 입력</h3><input id="nicknameInput"/><button onclick="saveNickname()">입장</button></div></div>
+<!-- ADMIN -->
+<section id="admin">
+  <div class="card">
+    <button onclick="resetAllData()">🔄 전체 리셋</button>
+    <div id="adminStats"></div>
+    <button onclick="loadAdminStats()">📊 통계 갱신</button>
+  </div>
+</section>
 
-<script>
-  function showTab(id){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
-</script>
+<!-- NICKNAME -->
+<div id="nicknameLayer">
+  <div class="card">
+    <h3>닉네임 입력</h3>
+    <input id="nicknameInput"/>
+    <button onclick="saveNickname()">입장</button>
+  </div>
+</div>
 </body>
 </html>
