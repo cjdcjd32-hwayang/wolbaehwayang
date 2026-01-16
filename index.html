@@ -1,116 +1,211 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Wolbaehwayang</title>
+<meta charset="UTF-8">
+<title>🌸 Wolbaehwayang</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fafafa;
+  padding: 16px;
+  margin: 0;
+}
+h1, h2, h3 { margin-top: 0; }
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 16px;
+}
+button {
+  background: #ffb7c5;
+  border: none;
+  border-radius: 8px;
+}
+button.admin {
+  background: #ddd;
+}
+.hidden { display: none; }
+
+.thermo {
+  height: 180px;
+  width: 36px;
+  border-radius: 18px;
+  background: #eee;
+  overflow: hidden;
+  margin: 12px auto;
+}
+.fill {
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to top, #ff4d4d, #ffd84d, #4da6ff);
+  transition: height 0.4s;
+}
+
+.rank-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+</style>
 </head>
 
 <body>
-<h1>🌱 Wolbaehwayang</h1>
 
-<div id="nicknameBox">
-  <h2>닉네임 입력</h2>
-  <input id="nicknameInput" placeholder="닉네임 입력" maxlength="10">
-  <button id="saveNicknameBtn">입장하기</button>
-  <p id="statusMsg"></p>
+<h1>🌸 Wolbaehwayang</h1>
+
+<!-- 로그인 -->
+<div class="card" id="loginCard">
+  <h3>닉네임</h3>
+  <input id="nicknameInput" placeholder="닉네임 입력">
+  <button id="loginBtn">입장</button>
 </div>
 
-<hr>
+<!-- 관리자 -->
+<div class="card">
+  <h3>관리자 로그인</h3>
+  <input id="adminPw" type="password" placeholder="관리자 비밀번호">
+  <button class="admin" id="adminLoginBtn">관리자 입장</button>
+</div>
 
-<h2>🌱 창제 기록</h2>
+<!-- 창제 -->
+<div class="card hidden" id="chantCard">
+  <h3>🌸 창제 기록</h3>
+  <select id="branch">
+    <option value="">지부 선택</option>
+    <option>달비</option><option>상인</option><option>원덕</option>
+    <option>대곡</option><option>월배</option><option>유천</option>
+    <option>진천</option><option>영남</option><option>옥포</option><option>화원</option>
+  </select>
+  <select id="time">
+    <option value="">시간</option>
+    <option value="10">10분</option>
+    <option value="30">30분</option>
+    <option value="60">1시간</option>
+  </select>
+  <button id="saveChant">저장</button>
+</div>
 
-<select id="branchSelect">
-  <option value="">소속 지부 선택</option>
-  <option value="달비">달비</option>
-  <option value="상인">상인</option>
-  <option value="원덕">원덕</option>
-  <option value="대곡">대곡</option>
-  <option value="월배">월배</option>
-  <option value="유천">유천</option>
-  <option value="진천">진천</option>
-  <option value="영남">영남</option>
-  <option value="옥포">옥포</option>
-  <option value="화원">화원</option>
-</select>
+<!-- 오늘 -->
+<div class="card">
+  <h3>오늘의 온도계</h3>
+  <p>총 <strong id="todayBlocks">0</strong> 칸</p>
+  <div class="thermo"><div class="fill" id="todayFill"></div></div>
+</div>
 
-<select id="timeSelect">
-  <option value="">창제 시간 선택</option>
-  <option value="10">10분</option>
-  <option value="30">30분</option>
-  <option value="60">1시간</option>
-</select>
+<!-- 월간 -->
+<div class="card">
+  <h3>월간 온도계</h3>
+  <p>총 <strong id="monthBlocks">0</strong> 칸</p>
+  <div class="thermo"><div class="fill" id="monthFill"></div></div>
+</div>
 
-<button id="saveChantBtn">창제 기록 저장</button>
-<p id="chantMsg"></p>
+<!-- 지부 합계 -->
+<div class="card">
+  <h3>지부별 합계</h3>
+  <div id="branchStats"></div>
+</div>
+
+<!-- 랭킹 -->
+<div class="card">
+  <h3>🏆 전체 랭킹</h3>
+  <div id="ranking"></div>
+</div>
+
+<!-- 관리자 패널 -->
+<div class="card hidden" id="adminPanel">
+  <h3>관리자 설정</h3>
+  <button class="admin" id="resetToday">오늘 리셋</button>
+  <button class="admin" id="resetMonth">월간 리셋</button>
+</div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp } 
-    from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs, query, where
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
-    authDomain: "wolbaehwayang-d1787.firebaseapp.com",
-    projectId: "wolbaehwayang-d1787"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyBau9yukCvYTsahSkjy0JndEk4Docmue1I",
+  authDomain: "wolbaehwayang-d1787.firebaseapp.com",
+  projectId: "wolbaehwayang-d1787"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  console.log("🔥 Firebase 연결 완료");
+const nicknameKey = "nickname";
+const adminKey = "admin";
 
-  // 닉네임 자동 입장
-  const savedNickname = localStorage.getItem("wolbaehwayang_nickname");
-  if (savedNickname) {
-    document.getElementById("nicknameBox").style.display = "none";
+const loginBtn = document.getElementById("loginBtn");
+const chantCard = document.getElementById("chantCard");
+
+loginBtn.onclick = () => {
+  const name = nicknameInput.value.trim();
+  if (!name) return;
+  localStorage.setItem(nicknameKey, name);
+  chantCard.classList.remove("hidden");
+};
+
+adminLoginBtn.onclick = () => {
+  if (adminPw.value === "1234") {
+    localStorage.setItem(adminKey, "true");
+    adminPanel.classList.remove("hidden");
   }
+};
 
-  // 닉네임 저장
-  document.getElementById("saveNicknameBtn").addEventListener("click", async () => {
-    const nickname = document.getElementById("nicknameInput").value.trim();
-    const msg = document.getElementById("statusMsg");
+saveChant.onclick = async () => {
+  const name = localStorage.getItem(nicknameKey);
+  const minutes = Number(time.value);
+  if (!name || !minutes) return;
 
-    if (!nickname) {
-      msg.innerText = "닉네임을 입력해주세요.";
-      msg.style.color = "red";
-      return;
-    }
+  await addDoc(collection(db, "chants"), {
+    nickname: name,
+    branch: branch.value,
+    blocks: minutes / 10,
+    date: new Date().toISOString().slice(0,7)
+  });
+  loadAll();
+};
 
-    await setDoc(doc(db, "users", nickname), {
-      nickname,
-      createdAt: serverTimestamp()
-    });
+async function loadAll() {
+  const snap = await getDocs(collection(db, "chants"));
+  let today = 0, month = 0;
+  let branchSum = {}, userSum = {};
 
-    localStorage.setItem("wolbaehwayang_nickname", nickname);
-    msg.innerText = "입장 완료!";
-    msg.style.color = "green";
-    document.getElementById("nicknameBox").style.display = "none";
+  snap.forEach(d => {
+    const b = d.data().blocks;
+    today += b;
+    month += b;
+    branchSum[d.data().branch] = (branchSum[d.data().branch] || 0) + b;
+    userSum[d.data().nickname] = (userSum[d.data().nickname] || 0) + b;
   });
 
-  // 창제 기록
-  document.getElementById("saveChantBtn").addEventListener("click", async () => {
-    const nickname = localStorage.getItem("wolbaehwayang_nickname");
-    const branch = document.getElementById("branchSelect").value;
-    const minutes = Number(document.getElementById("timeSelect").value);
-    const chantMsg = document.getElementById("chantMsg");
+  todayBlocks.innerText = today;
+  monthBlocks.innerText = month;
+  todayFill.style.height = Math.min(today*5,100)+"%";
+  monthFill.style.height = Math.min(month*3,100)+"%";
 
-    if (!nickname || !branch || !minutes) {
-      chantMsg.innerText = "닉네임, 지부, 시간을 모두 선택하세요.";
-      chantMsg.style.color = "red";
-      return;
-    }
+  branchStats.innerHTML = Object.entries(branchSum)
+    .map(([k,v]) => `<div>${k}: ${v}칸</div>`).join("");
 
-    await addDoc(collection(db, "chants"), {
-      nickname,
-      branch,
-      minutes,
-      blocks: minutes / 10,
-      createdAt: serverTimestamp()
-    });
+  ranking.innerHTML = Object.entries(userSum)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v],i)=>`<div class="rank-item">${i+1}. ${k}<span>${v}</span></div>`)
+    .join("");
+}
 
-    chantMsg.innerText = "창제 기록 저장 완료 🌱";
-    chantMsg.style.color = "green";
-  });
+loadAll();
 </script>
+
 </body>
 </html>
