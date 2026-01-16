@@ -238,6 +238,33 @@
     .thermo-mini .tube{ width:56px; height:176px; padding:7px; }
     .thermo-mini .bulb{ width:76px; height:76px; }
 
+    /* ===== HOME: 스피치 + D-Day 헤더 ===== */
+    .home-speech-head{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+    .dday-box{
+      min-width:88px;
+      text-align:center;
+      border:1px solid rgba(0,0,0,.10);
+      background:#fff;
+      border-radius:14px;
+      padding:8px 10px;
+    }
+    .dday-num{
+      font-weight:900;
+      font-size:1.05rem;
+      line-height:1.1;
+    }
+    .dday-label{
+      font-size:.78rem;
+      opacity:.78;
+      margin-top:2px;
+    }  
+
+    
     /* ===== 일정(달력) ===== */
     .card-header{
       display:flex; justify-content:space-between; align-items:center;
@@ -783,6 +810,70 @@
       });
     }
 
+    /* ===== D-Day (HOME) ===== */
+    const ddayKey = "wol_dday_target"; // localStorage 키 (YYYY-MM-DD)
+
+    function calcDday(targetDateKey){
+      if (!targetDateKey || !/^\d{4}-\d{2}-\d{2}$/.test(targetDateKey)) return null;
+
+      // 로컬 00:00 기준으로 계산
+      const [Y,M,D] = targetDateKey.split("-").map(Number);
+      const target = new Date(Y, M-1, D, 0,0,0,0);
+      const now = new Date();
+      const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0,0,0,0);
+
+      const diffDays = Math.round((target - today0) / (1000*60*60*24));
+      return diffDays; // 미래:+, 오늘:0, 과거:-
+    }
+
+    function renderDday(){
+      const elNum = $("ddayNum");
+      const elLab = $("ddayLabel");
+      if (!elNum || !elLab) return;
+
+      const targetKey = localStorage.getItem(ddayKey) || "";
+      const diff = calcDday(targetKey);
+
+      if (diff === null){
+        elNum.textContent = "D-Day";
+        elLab.textContent = "설정하기";
+        return;
+      }
+
+      if (diff > 0) elNum.textContent = `D-${diff}`;
+      else if (diff === 0) elNum.textContent = "D-DAY";
+      else elNum.textContent = `D+${Math.abs(diff)}`;
+
+      elLab.textContent = targetKey;
+    }
+
+    /* (선택) D-Day 설정: 관리자만 변경 */
+    window.openDdaySetting = () => {
+      // 관리자만 설정 허용 (원치 않으면 아래 if 제거)
+      if (!isAdminMode()){
+        alert("디데이 설정은 관리자 모드에서만 가능합니다.");
+        return;
+      }
+
+      const current = localStorage.getItem(ddayKey) || "";
+      const next = prompt("D-Day 날짜를 입력하세요 (YYYY-MM-DD)\n예: 2026-02-01", current);
+      if (next === null) return;
+
+      const v = next.trim();
+      if (!v){
+        localStorage.removeItem(ddayKey);
+        renderDday();
+        return;
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)){
+        alert("날짜 형식 오류(YYYY-MM-DD)");
+        return;
+      }
+      localStorage.setItem(ddayKey, v);
+      renderDday();
+    };
+
+    
     /* ===== 창제 탭: 상세 온도계 ===== */
     async function loadChantThermoDetailed(){
       const container = $("chantThermoGrid");
@@ -1955,6 +2046,8 @@
       await loadSchoolGrid(selected);
 
       applyAdminModeUI();
+
+       renderDday();
     }
 
     /* ===== 초기화 ===== */
@@ -1982,6 +2075,8 @@
         await loadSchoolGrid(b);
       });
 
+      renderDday(); 
+      
       if (nickname) await refreshAll();
     });
 
@@ -2010,13 +2105,23 @@
   <section id="home" class="active">
     <!-- 스피치 게시판: 최근 1개 -->
     <div class="card">
-      <div class="card-header">
+      <div class="card-header home-speech-head">
+        <!-- 왼쪽: D-Day -->
+        <div class="dday-box" onclick="openDdaySetting()" style="cursor:pointer;">
+          <div id="ddayNum" class="dday-num">D-</div>
+          <div id="ddayLabel" class="dday-label">디데이</div>
+        </div>
+
+        <!-- 가운데: 제목/설명 -->
         <div>
           <strong>스피치 게시판</strong>
           <div class="small">최근 글 1개 미리보기 · 클릭하면 전체 목록/상세를 볼 수 있습니다.</div>
         </div>
+
+        <!-- 오른쪽: 작성 버튼 -->
         <button class="mini-btn" onclick="openSpeechNew(); openSpeechBoard();" title="글쓰기">+ 작성</button>
       </div>
+
       <div id="speechPreviewBox"></div>
     </div>
 
@@ -2300,3 +2405,4 @@
   </script>
 </body>
 </html>
+
