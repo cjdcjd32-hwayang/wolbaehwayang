@@ -1107,7 +1107,6 @@
       });
 
       items.sort((a,b)=>{
-        activityCache = items; // ✅ 모달에서 참조
         const ak = a.plannedDateKey || "";
         const bk = b.plannedDateKey || "";
         if (ak !== bk) return ak.localeCompare(bk);
@@ -2405,4 +2404,5 @@
   </script>
 </body>
 </html>
+
 
